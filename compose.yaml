@@ -1,0 +1,30 @@
+services:
+  resource-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: resource-db
+      POSTGRES_USER: postgres  # Default, can be omitted if unchanged
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"  # Maps container port 5432 to host port 5432
+
+  song-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: song-db
+      POSTGRES_USER: postgres  # Default, can be omitted if unchanged
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # Maps container port 5432 to host port 5433 (to avoid conflict)
+
+# Related settings for application.properties:
+#
+# For resource-service:
+# spring.datasource.url=jdbc:postgresql://localhost:5432/resource-db
+# spring.datasource.username=postgres
+# spring.datasource.password=postgres
+#
+# For song-service:
+# spring.datasource.url=jdbc:postgresql://localhost:5433/song-db
+# spring.datasource.username=postgres
+# spring.datasource.password=postgres
