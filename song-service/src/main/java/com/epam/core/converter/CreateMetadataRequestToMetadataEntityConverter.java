@@ -14,7 +14,7 @@ public class CreateMetadataRequestToMetadataEntityConverter implements Converter
     @Override
     public SongMetadata convert(@NonNull SongMetadataRequestDto requestDto) {
         return SongMetadata.builder()
-                .resourceId(Objects.requireNonNull(requestDto.getId()))
+                .resourceId(Objects.requireNonNull(Integer.valueOf(requestDto.getId())))
                 .trackNumber(Objects.requireNonNull(requestDto.getTrackNumber()))
                 .name(Objects.requireNonNull(requestDto.getName()))
                 .artist(Objects.requireNonNull(requestDto.getArtist()))

@@ -18,6 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +32,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED, propagation = Propagation.SUPPORTS)
 public class SongMetadataService {
 
     static String IDS = "ids";
@@ -44,6 +48,9 @@ public class SongMetadataService {
     SongMetadataRepository metadataRepository;
     ConversionService conversionService;
 
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, timeout = 30,
+            rollbackFor = DeleteMetadataByIdsException.class
+    )
     public DeletedByIdsResponseDto deleteMetadataByIds(final String requestIds) {
         log.debug("Starting delete metadata by ID's: '{}'", requestIds);
 
@@ -105,6 +112,7 @@ public class SongMetadataService {
         }
     }
 
+    @Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED, readOnly = true)
     public SongMetadataResponseDto getMetadataById(final Integer requestId) {
         log.debug("Fetching song metadata for ID: '{}'", requestId);
 
@@ -132,6 +140,9 @@ public class SongMetadataService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ, timeout = 10,
+            rollbackFor = MetadataAlreadyExistException.class
+    )
     public SongMetadataIdResponseDto saveMetadata(SongMetadataRequestDto requestDto) {
         log.debug("Starting saving metadata with ID: '{}'", requestDto.getId());
 
