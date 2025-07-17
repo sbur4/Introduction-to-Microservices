@@ -51,13 +51,14 @@ dependencies {
 
     implementation "org.springframework.cloud:spring-cloud-starter-openfeign:${versions.openfeign}"
     implementation "org.springframework.cloud:spring-cloud-circuitbreaker-spring-retry:${versions.retry}"
+    implementation "org.springframework.cloud:spring-cloud-circuitbreaker-resilience4j:${versions.retry}"
     implementation "io.github.resilience4j:resilience4j-spring-boot3:${versions.resilience4j}"
     implementation "io.github.resilience4j:resilience4j-feign:${versions.resilience4j}"
     implementation "io.github.openfeign:feign-jackson:${versions.feign_jackson}"
 
     implementation "org.postgresql:postgresql:${versions.postgresql}"
 
-    compileOnly 'org.projectlombok:lombok'
+    implementation 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation "org.apache.tika:tika-core:${versions.tika}"

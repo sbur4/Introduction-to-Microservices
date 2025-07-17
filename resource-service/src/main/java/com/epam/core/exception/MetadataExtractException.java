@@ -5,40 +5,40 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Map;
 
-public class SongAlreadyExistException extends BaseRuntimeException {
+public class MetadataExtractException extends BaseRuntimeException {
 
     private static final int errorHttpStatusCode = HttpStatus.BAD_REQUEST.value();
     private static final String errorHttpMessage = "Metadata extract error.";
 
-    public SongAlreadyExistException(String errorMessage) {
+    public MetadataExtractException(String errorMessage) {
         super(errorMessage, errorHttpStatusCode);
     }
 
-    public SongAlreadyExistException(String errorMessage, HttpStatus httpStatus) {
+    public MetadataExtractException(String errorMessage, HttpStatus httpStatus) {
         super(errorMessage, httpStatus);
     }
 
-    public SongAlreadyExistException(String errorMessage, int httpStatus) {
+    public MetadataExtractException(String errorMessage, int httpStatus) {
         super(errorMessage, httpStatus);
     }
 
-    public SongAlreadyExistException(Map<String, String> errorDetails) {
+    public MetadataExtractException(Map<String, String> errorDetails) {
         super(errorHttpMessage, errorHttpStatusCode, errorDetails);
     }
 
-    public SongAlreadyExistException(HttpStatus httpStatus, Map<String, String> errorDetails) {
+    public MetadataExtractException(HttpStatus httpStatus, Map<String, String> errorDetails) {
         super(errorHttpMessage, httpStatus, errorDetails);
     }
 
-    public SongAlreadyExistException(String errorMessage, Map<String, String> errorDetails) {
+    public MetadataExtractException(String errorMessage, Map<String, String> errorDetails) {
         super(errorMessage, errorHttpStatusCode, errorDetails);
     }
 
-    public SongAlreadyExistException(String errorMessage, HttpStatus httpStatus, Map<String, String> errorDetails) {
+    public MetadataExtractException(String errorMessage, HttpStatus httpStatus, Map<String, String> errorDetails) {
         super(errorMessage, httpStatus, errorDetails);
     }
 
-    public SongAlreadyExistException(String errorMessage, int httpStatus, Map<String, String> errorDetails) {
+    public MetadataExtractException(String errorMessage, int httpStatus, Map<String, String> errorDetails) {
         super(errorMessage, httpStatus, errorDetails);
     }
 }

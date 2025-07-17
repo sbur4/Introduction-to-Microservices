@@ -2,17 +2,13 @@ package com.epam.core.service;
 
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
-import com.epam.core.dto.response.SongAndMetadataResponseDto;
-import com.epam.core.dto.response.SongMetadataResponseDto;
-import com.epam.core.dto.response.SongResponseDto;
 import com.epam.core.dto.response.UploadedSongResponseDto;
 import com.epam.core.exception.AudioDataException;
 import com.epam.core.exception.DeleteSongAndMetadataByIdsException;
-import com.epam.core.exception.GetSongAndMetadataByIdException;
+import com.epam.core.exception.GetSongByIdException;
 import com.epam.core.exception.ResourceDeletionException;
 import com.epam.core.exception.SongAlreadyExistException;
 import com.epam.core.extractor.impl.MetadataExtractorImpl;
-import com.epam.core.mapper.impl.SongAndMetadataMapperImpl;
 import com.epam.core.util.AudioParserUtil;
 import com.epam.data.entity.Song;
 import com.epam.data.repository.ResourceRepository;
@@ -25,8 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.metadata.Metadata;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -45,21 +43,8 @@ import java.util.Objects;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ResourceService {
 
-    static String IDS = "ids";
-    static String RESTRICTION_CSV_STRING_CANNOT_BE_EMPTY = "Restriction: CSV string cannot be empty.";
-    static String THE_PROVIDED_ID_S_IS_INVALID =
-            "The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero).";
-    static String RESTRICTION_CSV_STRING_LENGTH_MUST_BE_LESS_THAN_200_CHARACTERS =
-            "Restriction: CSV string length must be less than 200 characters.";
-    static String RESTRICTION_SONG_METADATA_WITH_THE_SPECIFIED_ID_S_DOES_NOT_EXIST =
-            "Restriction: Song with the specified ID's does not exist.";
-    static String LOG_INFO = ": '{}'";
-    static String THE_PROVIDED_ID_IS_INVALID = "The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).";
-
     ResourceRepository resourceRepository;
     SongServiceFeignClient songServiceFeignClient;
-    ConversionService conversionService;
-    SongAndMetadataMapperImpl dataMapper;
     MetadataExtractorImpl metadataExtractor;
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.DEFAULT)
@@ -73,57 +58,53 @@ public class ResourceService {
                 .map(Integer::parseInt)
                 .toList();
 
-        validateSplittedIds(splittedIds);
-
         log.debug("Validated and parsed ID's: '{}'", splittedIds);
         List<Integer> idsForRemoving = resourceRepository.findExistingIds(splittedIds);
 
-        validateIdsForRemoving(idsForRemoving);
+        if (CollectionUtils.isEmpty(idsForRemoving)) {
+            log.warn("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
+        } else {
+            deleteMetadata(requestIds);
 
-        deleteMetadata(requestIds);
-
-        log.debug("Deleting songs for ID's': '{}'", idsForRemoving);
-        resourceRepository.deleteAllById(idsForRemoving);
-
-        log.info("Successfully deleted songs and metadata for ID's: '{}'", idsForRemoving);
+            log.debug("Deleting songs by ID's: '{}'", idsForRemoving);
+            resourceRepository.deleteAllById(idsForRemoving);
+            log.info("Successfully deleted songs and metadata by ID's: '{}'", idsForRemoving);
+        }
         return new DeletedByIdsResponseDto(idsForRemoving);
     }
 
     private void deleteMetadata(String requestIds) {
         try {
-            log.debug("Deleting metadata for ID's': '{}'", requestIds);
+            log.debug("Deleting metadata by ID's: '{}'", requestIds);
             songServiceFeignClient.deleteMetadataByIds(requestIds);
-            log.info("Successfully deleted metadata for ID's: '{}'", requestIds);
+            log.info("Successfully deleted metadata by ID's: '{}'", requestIds);
         } catch (FeignException ex) {
-            log.error("FeignException occurred while deleting metadata for IDs '{}': {}", requestIds, ex.contentUTF8(), ex);
-            Map<String, String> errorDetails = Map.of(IDS + ": '{" + requestIds + "}'", "Failed to delete metadata for IDs.");
-            throw new ResourceDeletionException("Failed to delete metadata for IDs.", errorDetails);
+            log.error("FeignException occurred while deleting metadata by ID's '{}': {}", requestIds, ex.contentUTF8(), ex);
+            throw new ResourceDeletionException("Failed to delete metadata by ID's: '{%s}'".formatted(requestIds));
         }
     }
 
     private void validateIdsForRemoving(List<Integer> idsForRemoving) {
         if (CollectionUtils.isEmpty(idsForRemoving)) {
-            Map<String, String> errorDetails = Collections.singletonMap(IDS,
-                    RESTRICTION_SONG_METADATA_WITH_THE_SPECIFIED_ID_S_DOES_NOT_EXIST);
-            log.error(RESTRICTION_SONG_METADATA_WITH_THE_SPECIFIED_ID_S_DOES_NOT_EXIST + LOG_INFO, idsForRemoving);
+            Map<String, String> errorDetails = Collections.singletonMap("Restriction",
+                    "Song with the specified ID's does not exist: '{%s}'".formatted(idsForRemoving));
+            log.error("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
             throw new DeleteSongAndMetadataByIdsException(HttpStatus.NOT_FOUND, errorDetails);
-        }
-    }
-
-    private void validateSplittedIds(List<Integer> splittedIds) {
-        if (splittedIds.size() > 200) {
-            Map<String, String> errorDetails = Collections.singletonMap(IDS,
-                    RESTRICTION_CSV_STRING_LENGTH_MUST_BE_LESS_THAN_200_CHARACTERS);
-            log.error(RESTRICTION_CSV_STRING_LENGTH_MUST_BE_LESS_THAN_200_CHARACTERS + LOG_INFO, splittedIds);
-            throw new DeleteSongAndMetadataByIdsException(errorDetails);
         }
     }
 
     private void validateRequestIds(String requestIds) {
         if (StringUtils.isBlank(requestIds)) {
-            Map<String, String> errorDetails = Map.of(IDS, RESTRICTION_CSV_STRING_CANNOT_BE_EMPTY);
-            log.error(RESTRICTION_CSV_STRING_CANNOT_BE_EMPTY);
+            Map<String, String> errorDetails = Map.of("Restriction", "CSV string cannot be empty.");
+            log.error("Restriction: CSV string cannot be empty.");
             throw new DeleteSongAndMetadataByIdsException(errorDetails);
+        }
+
+        if (requestIds.length() > 200) {
+            Map<String, String> errorDetails = Collections.singletonMap("Restriction",
+                    "CSV string length must be less than 200 characters.");
+            log.error("Restriction: CSV string length must be less than 200 characters. Actual length: '{}'", requestIds.length());
+            throw new DeleteSongAndMetadataByIdsException("Actual length: '{%d}'".formatted(requestIds.length()), errorDetails);
         }
 
         List<String> invalidIds = Arrays.stream(StringUtils.split(requestIds, ","))
@@ -132,55 +113,40 @@ public class ResourceService {
                 .toList();
 
         if (CollectionUtils.isNotEmpty(invalidIds)) {
-            Map<String, String> errorDetails = Map.of(IDS + ": " + invalidIds, THE_PROVIDED_ID_S_IS_INVALID);
-            log.error(THE_PROVIDED_ID_S_IS_INVALID + LOG_INFO, invalidIds);
+            Map<String, String> errorDetails = Map.of("ID's: %s".formatted(invalidIds),
+                    "The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero).");
+            log.error("The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{%s}'".formatted(invalidIds));
             throw new DeleteSongAndMetadataByIdsException(errorDetails);
         }
     }
 
-//    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED)
-    public SongAndMetadataResponseDto getSongAndMetadataById(final Integer requestId) {
-        log.debug("Fetching song and metadata for ID: '{}'", requestId);
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED)
+    public Resource getSongById(final Integer requestId) {
+        log.debug("Fetching song by ID: '{}'", requestId);
 
         validateRequestId(requestId);
 
-        SongMetadataResponseDto metadataResponseDto = fetchMetadata(requestId);
-        log.info("Successfully fetched metadata for ID' '{}'", requestId);
-
         Song fetchedSong = fetchedSong(requestId);
+        log.info("Successfully fetched song by ID' '{}'", requestId);
 
-        SongResponseDto songResponseDto = conversionService.convert(fetchedSong, SongResponseDto.class);
-        SongAndMetadataResponseDto songAndMetadataResponseDto = dataMapper.mapData(metadataResponseDto, songResponseDto);
-
-        log.info("Successfully fetched song and metadata for ID: '{}'", requestId);
-        return songAndMetadataResponseDto;
+        return new ByteArrayResource(fetchedSong.getData());
     }
 
     private Song fetchedSong(Integer requestId) {
         return resourceRepository.findById(requestId)
                 .orElseThrow(() -> {
                     log.error("Song with the specified ID '{}' does not exist.", requestId);
-                    return new GetSongAndMetadataByIdException(
-                            "Song with the specified ID %s does not exist".formatted(requestId), HttpStatus.NOT_FOUND);
+                    return new GetSongByIdException(
+                            "Song with the specified ID '%s' does not exist".formatted(requestId), HttpStatus.NOT_FOUND);
                 });
-    }
-
-    private SongMetadataResponseDto fetchMetadata(Integer requestId) {
-        try {
-            log.debug("Fetching metadata for ID': '{}'", requestId);
-            return songServiceFeignClient.getMetadataById(requestId);
-        } catch (FeignException ex) {
-            log.error("Failed to fetch metadata for ID '{}': {}", requestId, ex.contentUTF8(), ex);
-            Map<String, String> errorDetails = Map.of("id" + ": '{" + requestId + "}'", "Failed to fetch metadata for ID.");
-            throw new ResourceDeletionException("Failed to metadata metadata for ID.", errorDetails);
-        }
     }
 
     private void validateRequestId(Integer requestId) {
         if (Objects.isNull(requestId) || requestId <= 0) {
-            Map<String, String> errorDetails = Map.of("id", THE_PROVIDED_ID_IS_INVALID);
-            log.error(THE_PROVIDED_ID_IS_INVALID);
-            throw new GetSongAndMetadataByIdException(errorDetails);
+            Map<String, String> errorDetails = Map.of("ID: %s".formatted(requestId),
+                    "The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).");
+            log.error("The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero): %s".formatted(requestId));
+            throw new GetSongByIdException(errorDetails);
         }
     }
 
@@ -188,7 +154,10 @@ public class ResourceService {
     public UploadedSongResponseDto saveSongAndMetadata(final byte[] audioFile) {
         log.debug("Starting saving song and metadata.");
 
-        validateBinaryData(audioFile);
+//        validateBinaryData(audioFile);
+        if (audioFile == null || audioFile.length == 0) {
+            return new UploadedSongResponseDto();
+        }
 
         Metadata audioMetadata = AudioParserUtil.parseMp3File(audioFile);
 
@@ -213,8 +182,22 @@ public class ResourceService {
             log.info("Successfully saved metadata for ID: '{}'", songId);
         } catch (FeignException ex) {
             log.error("Failed to save metadata for song ID '{}': {}", songId, ex.contentUTF8());
-            Map<String, String> errorDetails = Map.of(IDS + ": '{" + songId + "}'", "Failed to save metadata for song.");
+            Map<String, String> errorDetails = Map.of("IDS: '{%d}'".formatted(songId), "Failed to save metadata for song.");
             throw new ResourceDeletionException("Failed to save metadata.", errorDetails);
+        }
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED)
+    private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
+        Example<Song> songExample = Example.of(rawSong, ExampleMatcher.matching().withIgnorePaths("id"));
+        boolean isExists = resourceRepository.exists(songExample);
+
+        if (isExists) {
+            String songInfo = String.format("Name: %s, Artist: %s",
+                    songMetadataRequestDto.getName(), songMetadataRequestDto.getArtist());
+            log.error("Duplicate song detected: '{}'", songInfo);
+            Map<String, String> errorDetails = Map.of("Song info", songInfo);
+            throw new SongAlreadyExistException("Song already exists.", errorDetails);
         }
     }
 
@@ -222,20 +205,6 @@ public class ResourceService {
         if (audioFile == null || audioFile.length == 0) {
             log.error("Empty audio file provided.");
             throw new AudioDataException("Audio file cannot be empty.");
-        }
-    }
-
-    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED)
-    private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        Example<Song> songExample = Example.of(rawSong);
-        boolean isExists = resourceRepository.exists(songExample);
-
-        if (isExists) {
-            String songInfo = String.format("Name: %s, Artist: %s",
-                    songMetadataRequestDto.getName(), songMetadataRequestDto.getArtist());
-            log.error("Duplicate song detected: {}", songInfo);
-            Map<String, String> errorDetails = Map.of("Song info", songInfo);
-            throw new SongAlreadyExistException("Song already exists.", errorDetails);
         }
     }
 }

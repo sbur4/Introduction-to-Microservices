@@ -15,12 +15,11 @@ public class CreateMetadataRequestToMetadataEntityConverter implements Converter
     public SongMetadata convert(@NonNull SongMetadataRequestDto requestDto) {
         return SongMetadata.builder()
                 .resourceId(Objects.requireNonNull(Integer.valueOf(requestDto.getId())))
-                .trackNumber(Objects.requireNonNull(requestDto.getTrackNumber()))
                 .name(Objects.requireNonNull(requestDto.getName()))
                 .artist(Objects.requireNonNull(requestDto.getArtist()))
                 .album(Objects.requireNonNull(requestDto.getAlbum()))
                 .duration(Objects.requireNonNull(requestDto.getDuration()))
-                .year(Objects.requireNonNull(requestDto.getName()))
+                .year(Objects.requireNonNull(requestDto.getYear()))
                 .build();
     }
 }

@@ -9,8 +9,5 @@ import java.util.List;
 @Repository
 public interface SongMetadataRepository extends JpaRepository<SongMetadata, Integer> {
 
-//    @Query(value = "SELECT id FROM songs_metadata WHERE resource_id IN :ids", nativeQuery = true)
-//    List<Integer> findExistingIds(@Param("ids") List<Integer> ids);
-
-    List<Integer> findByResourceIdIn(List<Integer> ids);
+    List<Integer> findByIdIn(List<Integer> ids);
 }

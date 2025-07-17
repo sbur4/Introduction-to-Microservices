@@ -6,18 +6,17 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 @Data
 @Builder
+@EqualsAndHashCode(exclude = "id")
 public class SongMetadataRequestDto {
 
     @Min(value = 1, message = "Numeric, must match an existing Resource ID.")
     int id;
-
-    @NotBlank(message = "Must match an existing Track ID.")
-    String trackNumber;
 
     @NotBlank(message = "Must match an existing Track Name.")
     @Size(min = 1, max = 100, message = "Track name must contains 1-100 characters text.")

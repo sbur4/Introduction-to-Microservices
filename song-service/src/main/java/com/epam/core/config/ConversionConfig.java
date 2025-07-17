@@ -3,11 +3,14 @@ package com.epam.core.config;
 import com.epam.core.converter.CreateMetadataRequestToMetadataEntityConverter;
 import com.epam.core.converter.GetMetadataEntityToMetadataResponseConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.ConversionServiceFactoryBean;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,5 +37,11 @@ public class ConversionConfig {
                 new GetMetadataEntityToMetadataResponseConverter(),
                 new CreateMetadataRequestToMetadataEntityConverter()
         ).collect(Collectors.toSet());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ConversionService defaultConversionService() {
+        return new DefaultConversionService();
     }
 }

@@ -14,8 +14,7 @@ public class GetMetadataEntityToMetadataResponseConverter implements Converter<S
     @Override
     public SongMetadataResponseDto convert(@NonNull SongMetadata fetchedSongMetadata) {
         return SongMetadataResponseDto.builder()
-                .resourceId(Objects.requireNonNull(fetchedSongMetadata.getResourceId()))
-                .trackNumber(Objects.requireNonNull(fetchedSongMetadata.getTrackNumber()))
+                .id(Objects.requireNonNull(fetchedSongMetadata.getResourceId()))
                 .name(Objects.requireNonNull(fetchedSongMetadata.getName()))
                 .artist(Objects.requireNonNull(fetchedSongMetadata.getArtist()))
                 .album(Objects.requireNonNull(fetchedSongMetadata.getAlbum()))

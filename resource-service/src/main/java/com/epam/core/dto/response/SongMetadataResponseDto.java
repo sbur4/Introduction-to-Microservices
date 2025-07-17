@@ -6,8 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class SongMetadataResponseDto {
-    int resourceId;
-    String trackNumber;
+    int id;
     String name;
     String artist;
     String album;

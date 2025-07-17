@@ -1,31 +1,20 @@
 package com.epam.core.exception;
 
-import com.epam.web.model.ApiErrorResponse;
-import com.epam.web.model.ApiErrorResponseDetails;
-import lombok.Getter;
+import com.epam.core.exception.core.BaseRuntimeException;
 import org.springframework.http.HttpStatus;
 
 import java.util.Map;
 
-public class GetMetadataByIdException extends RuntimeException {
+public class GetMetadataByIdException extends BaseRuntimeException {
 
-    @Getter
-    private final ApiErrorResponse apiErrorResponse;
-
-    private final String errorHttpMessage = "Validation failure";
+    private static final int errorHttpStatusCode = HttpStatus.BAD_REQUEST.value();
+    private static final String errorHttpMessage = "Get metadata by ID error.";
 
     public GetMetadataByIdException(String errorMessage, HttpStatus httpStatus) {
-        this.apiErrorResponse = ApiErrorResponse.builder()
-                .errorMessage(errorMessage)
-                .errorCode(httpStatus.value())
-                .build();
+        super(errorMessage, httpStatus);
     }
 
     public GetMetadataByIdException(Map<String, String> errorDetails) {
-        this.apiErrorResponse = ApiErrorResponseDetails.builder()
-                .errorMessage(errorHttpMessage)
-                .errorCode(HttpStatus.BAD_REQUEST.value())
-                .errorDetails(errorDetails)
-                .build();
+        super(errorHttpMessage, errorHttpStatusCode, errorDetails);
     }
 }

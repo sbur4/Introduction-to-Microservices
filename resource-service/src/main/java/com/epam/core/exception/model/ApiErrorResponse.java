@@ -1,4 +1,4 @@
-package com.epam.web.model;
+package com.epam.core.exception.model;
 
 import lombok.Data;
 import lombok.experimental.SuperBuilder;

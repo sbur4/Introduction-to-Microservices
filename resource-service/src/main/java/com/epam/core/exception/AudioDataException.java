@@ -1,18 +1,13 @@
 package com.epam.core.exception;
 
-import com.epam.web.model.ApiErrorResponse;
-import lombok.Getter;
+import com.epam.core.exception.core.BaseRuntimeException;
 import org.springframework.http.HttpStatus;
 
-@Getter
-public class AudioDataException extends RuntimeException {
-    private final ApiErrorResponse apiErrorResponse;
+public class AudioDataException extends BaseRuntimeException {
+
+    private static final int errorHttpStatusCode = HttpStatus.OK.value();
 
     public AudioDataException(String errorMessage) {
-        int errorHttpCode = HttpStatus.BAD_REQUEST.value();
-        this.apiErrorResponse = ApiErrorResponse.builder()
-                .errorMessage(errorMessage)
-                .errorCode(errorHttpCode)
-                .build();
+        super(errorMessage, errorHttpStatusCode);
     }
 }

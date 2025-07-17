@@ -6,6 +6,7 @@ import com.epam.core.dto.response.SongMetadataIdResponseDto;
 import com.epam.core.dto.response.SongMetadataResponseDto;
 import com.epam.core.service.SongMetadataService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,8 @@ public class SongMetadataController {
     }
 
     @GetMapping(path = "/{id}")
-    public ResponseEntity<SongMetadataResponseDto> getMetadataById(@PathVariable(name = "id") Integer requestId) {
+    public ResponseEntity<SongMetadataResponseDto> getMetadataById(@Positive(message = "ID must be a positive number.")
+                                                                   @PathVariable(name = "id") Integer requestId) {
         return ResponseEntity.ok().body(songMetadataService.getMetadataById(requestId));
     }
 

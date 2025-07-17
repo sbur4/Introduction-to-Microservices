@@ -14,7 +14,7 @@ import org.apache.commons.numbers.core.Precision;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class DurationFormatUtil {
 
-    static int DIVISION = 10;
+    static int DIVISION = 100;
     static int SCALE = 2;
     static String SEPARATOR = ".";
     static String FORMAT = "%02d:%02d";

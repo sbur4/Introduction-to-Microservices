@@ -1,12 +1,15 @@
 package com.epam.web.controller;
 
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
-import com.epam.core.dto.response.SongAndMetadataResponseDto;
 import com.epam.core.dto.response.UploadedSongResponseDto;
 import com.epam.core.service.ResourceService;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,9 +31,14 @@ public class ResourceController {
         return new ResponseEntity<>(resourceService.saveSongAndMetadata(mediaContent.getBody()), HttpStatus.OK);
     }
 
+    @SneakyThrows
     @GetMapping(path = "/{id}")
-    public ResponseEntity<SongAndMetadataResponseDto> getSongAndMetadataById(@PathVariable(name = "id") Integer requestId) {
-        return ResponseEntity.ok().body(resourceService.getSongAndMetadataById(requestId));
+    public ResponseEntity<Resource> getSongById(@Positive @PathVariable(name = "id") Integer requestId) {
+        Resource resource = resourceService.getSongById(requestId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("audio/mpeg"))
+                .contentLength(resource.contentLength())
+                .body(resource);
     }
 
     @DeleteMapping

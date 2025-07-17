@@ -31,9 +31,6 @@ public class SongMetadata {
     @Column(nullable = false, unique = true)
     private Integer resourceId;
 
-    @Column(nullable = false)
-    private String trackNumber;
-
     @Column(nullable = false, length = 200)
     private String name;
 
