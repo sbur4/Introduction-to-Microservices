@@ -9,13 +9,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 
 @Documented
-@Target({ANNOTATION_TYPE, FIELD, METHOD, PARAMETER})
+@Target({METHOD, FIELD, PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = DurationValidator.class)
 public @interface DurationValidationConstraint {

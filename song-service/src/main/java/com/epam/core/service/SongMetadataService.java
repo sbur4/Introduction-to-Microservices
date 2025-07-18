@@ -37,7 +37,7 @@ public class SongMetadataService {
     private final SongMetadataRepository metadataRepository;
     private final ConversionService conversionService;
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, timeout = 30,
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE,
             rollbackFor = DeleteMetadataByIdsException.class
     )
     public DeletedByIdsResponseDto deleteMetadataByIds(final String requestIds) {
@@ -51,12 +51,13 @@ public class SongMetadataService {
                 .toList();
 
         log.debug("Validated and parsed ID's: '{}'", splittedIds);
-        List<Integer> idsForRemoving = metadataRepository.findByIdIn(splittedIds);
+        List<Integer> idsForRemoving = metadataRepository.findExistingIdsByResourceIdIn(splittedIds);
 
 //        validateIdsForRemoving(idsForRemoving);
-
-        log.debug("Deleting metadata by ID's': '{}'", idsForRemoving);
-        metadataRepository.deleteAllById(idsForRemoving);
+        if (CollectionUtils.isNotEmpty(idsForRemoving)) {
+            log.debug("Deleting metadata by ID's': '{}'", idsForRemoving);
+            metadataRepository.deleteByIdIn(idsForRemoving);
+        }
 
         log.info("Successfully deleted metadata by ID's: '{}'", idsForRemoving);
         return new DeletedByIdsResponseDto(idsForRemoving);
@@ -104,7 +105,7 @@ public class SongMetadataService {
 
         validateRequestId(requestId);
 
-        SongMetadata fetchedSongMetadata = metadataRepository.findById(requestId)
+        SongMetadata fetchedSongMetadata = metadataRepository.findByResourceId(requestId)
                 .orElseThrow(() -> {
                     log.error("Song metadata with the specified ID '{}' does not exist.", requestId);
                     return new GetMetadataByIdException(
@@ -143,7 +144,7 @@ public class SongMetadataService {
     }
 
     private void validateRequestDto(SongMetadataRequestDto requestDto) {
-        boolean isMetadataExist = metadataRepository.findById(requestDto.getId()).isPresent();
+        boolean isMetadataExist = metadataRepository.findByResourceId(requestDto.getId()).isPresent();
         if (isMetadataExist) {
             Map<String, String> errorDetails = Map.of("id: '{%d}'".formatted(requestDto.getId()),
                     "Metadata for this ID already exists.");

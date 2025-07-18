@@ -24,7 +24,6 @@ import org.apache.tika.metadata.Metadata;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -36,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -64,9 +64,13 @@ public class ResourceService {
         if (CollectionUtils.isEmpty(idsForRemoving)) {
             log.warn("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
         } else {
-            deleteMetadata(requestIds);
+            String ids = idsForRemoving.stream()
+                    .map(i -> Integer.toString(i))
+                    .collect(Collectors.joining(", "));
 
-            log.debug("Deleting songs by ID's: '{}'", idsForRemoving);
+            deleteMetadata(ids);
+
+            log.debug("Deleting songs by ID's: '{}'", ids);
             resourceRepository.deleteAllById(idsForRemoving);
             log.info("Successfully deleted songs and metadata by ID's: '{}'", idsForRemoving);
         }
@@ -150,7 +154,8 @@ public class ResourceService {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
+    //    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
+    @Transactional
     public UploadedSongResponseDto saveSongAndMetadata(final byte[] audioFile) {
         log.debug("Starting saving song and metadata.");
 
@@ -189,7 +194,7 @@ public class ResourceService {
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED)
     private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        Example<Song> songExample = Example.of(rawSong, ExampleMatcher.matching().withIgnorePaths("id"));
+        Example<Song> songExample = Example.of(rawSong);
         boolean isExists = resourceRepository.exists(songExample);
 
         if (isExists) {

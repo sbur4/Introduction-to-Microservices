@@ -6,9 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Value;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
 @Value
 public class SongMetadataRequestDto {
 

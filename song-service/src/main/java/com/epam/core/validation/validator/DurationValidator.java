@@ -6,38 +6,45 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
-import java.util.function.Predicate;
-
 public class DurationValidator implements ConstraintValidator<DurationValidationConstraint, String> {
 
     private static final String DURATION_FORMAT_REGEX = "^\\d{2}:\\d{2}$";
 
-    private final Predicate<String> isBlankOrInvalidLength = value -> StringUtils.isBlank(value) || value.length() != 5;
-    private final Predicate<String> matchesFormat = value -> !value.matches(DURATION_FORMAT_REGEX);
-    private final Predicate<String> isCorrectTime = value -> !StringUtils.isNumeric(value) || NumberUtils.createInteger(value) > 60;
-
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (isBlankOrInvalidLength.test(value)) {
-            buildConstraintViolation(context, "Duration cannot be blank");
+        if (StringUtils.isBlank(value)) {
+            buildConstraintViolation(context, "Duration cannot be blank.");
             return false;
         }
 
-        if (matchesFormat.test(value)) {
+        if (value.length() != 5 || !value.matches(DURATION_FORMAT_REGEX)) {
+            buildConstraintViolation(context, "Duration must be in mm:ss format with leading zeros (e.g., 05:30).");
             return false;
         }
 
-        String minutes = value.substring(0, 2);
-        if (isCorrectTime.test(minutes)) {
-            buildConstraintViolation(context, "Minutes cannot be more than 60.");
+        String minutesStr = value.substring(0, 2);
+        String secondsStr = value.substring(3, 5);
+
+        if (!NumberUtils.isParsable(minutesStr)) {
+            buildConstraintViolation(context, "Minutes must be numeric.");
+            return false;
+        }
+        int minutes = Integer.parseInt(minutesStr);
+        if (minutes < 0 || minutes > 59) {
+            buildConstraintViolation(context, "Minutes must be between 00 and 59.");
             return false;
         }
 
-        String seconds = value.substring(3, 5);
-        if (isCorrectTime.test(seconds)) {
-            buildConstraintViolation(context, "Seconds cannot be more than 60.");
+        if (!NumberUtils.isParsable(secondsStr)) {
+            buildConstraintViolation(context, "Seconds must be numeric.");
             return false;
         }
+        int seconds = Integer.parseInt(secondsStr);
+        if (seconds < 0 || seconds > 59) {
+            buildConstraintViolation(context, "Seconds must be between 00 and 59.");
+            return false;
+        }
+
         return true;
     }
 
