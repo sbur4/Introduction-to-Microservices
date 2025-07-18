@@ -187,7 +187,7 @@ public class ResourceService {
             log.info("Successfully saved metadata for ID: '{}'", songId);
         } catch (FeignException ex) {
             log.error("Failed to save metadata for song ID '{}': {}", songId, ex.contentUTF8());
-            Map<String, String> errorDetails = Map.of("IDS: '{%d}'".formatted(songId), "Failed to save metadata for song.");
+            Map<String, String> errorDetails = Map.of("ID: '{%d}'".formatted(songId), "Failed to save metadata for song.");
             throw new ResourceDeletionException("Failed to save metadata.", errorDetails);
         }
     }
