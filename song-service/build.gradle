@@ -52,3 +52,7 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:${versions.commons_lang3}"
     implementation "org.apache.commons:commons-collections4:${versions.commons_collections4}"
 }
+
+tasks.named('jar') {
+    enabled = false
+}

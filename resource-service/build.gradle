@@ -58,7 +58,7 @@ dependencies {
 
     implementation "org.postgresql:postgresql:${versions.postgresql}"
 
-    implementation 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation "org.apache.tika:tika-core:${versions.tika}"
@@ -67,4 +67,8 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:${versions.commons_lang3}"
     implementation "org.apache.commons:commons-collections4:${versions.commons_collections4}"
     implementation 'org.apache.commons:commons-math4-core:4.0-beta1'
+}
+
+tasks.named('jar') {
+    enabled = false
 }
