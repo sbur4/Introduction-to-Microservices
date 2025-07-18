@@ -9,12 +9,12 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-#    initialize: true
-#    initialization-mode: always
+    #    initialize: true
+    #    initialization-mode: always
     url: ${POSTGRE_URL:jdbc:postgresql://localhost:5433/song-db}
     username: ${POSTGRE_USER:postgres}
-    #    password: ${POSTGRE_PASSWORD:postgres}
-    password: ${POSTGRE_PASSWORD:password12@}
+    password: ${POSTGRE_PASSWORD:postgres}
+    #    password: ${POSTGRE_PASSWORD:password12@}
     driver-class-name: org.postgresql.Driver
     hikari:
       auto-commit: true
@@ -23,15 +23,15 @@ spring:
       minimum-idle: 5
       pool-name: SongHikariPool
       max-lifetime: 1800000
-#      leak-detection-threshold: 10000
+  #      leak-detection-threshold: 10000
 
-#    testWhileIdle: true
-#    validationQuery: SELECT 1
-#    initialization-mode: always
-#    continue-on-error: true
+  #    testWhileIdle: true
+  #    validationQuery: SELECT 1
+  #    initialization-mode: always
+  #    continue-on-error: true
 
   jpa:
-#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    #    database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: true
     show-sql: true
     generate-ddl: true
