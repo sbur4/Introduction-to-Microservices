@@ -11,10 +11,10 @@ spring:
   datasource:
     #    initialize: true
     #    initialization-mode: always
-    url: ${POSTGRE_URL:jdbc:postgresql://localhost:5432/song-db}
+    url: ${POSTGRE_URL:jdbc:postgresql://localhost:5433/song-db}
     username: ${POSTGRE_USER:postgres}
-      #    password: ${POSTGRE_PASSWORD:postgres}
-    password: ${POSTGRE_PASSWORD:password12@}
+    password: ${POSTGRE_PASSWORD:postgres}
+#    password: ${POSTGRE_PASSWORD:password12@}
     driver-class-name: org.postgresql.Driver
     hikari:
       auto-commit: true
