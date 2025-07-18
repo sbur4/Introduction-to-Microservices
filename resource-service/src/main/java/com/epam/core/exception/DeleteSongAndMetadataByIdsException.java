@@ -1,9 +1,6 @@
 package com.epam.core.exception;
 
 import com.epam.core.exception.core.BaseRuntimeException;
-import com.epam.core.exception.model.ApiErrorResponse;
-import com.epam.core.exception.model.ApiErrorResponseDetails;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import java.util.Map;

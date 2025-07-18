@@ -10,8 +10,6 @@ import com.epam.core.exception.ResourceDeletionException;
 import com.epam.core.exception.SongAlreadyExistException;
 import com.epam.core.exception.model.ApiErrorModel;
 import com.epam.core.exception.model.ApiErrorModelDetails;
-import com.epam.core.exception.model.ApiErrorResponse;
-import com.epam.core.exception.model.ApiErrorResponseDetails;
 import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -90,9 +88,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<ApiErrorModel> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         log.warn("Exception encountered: '{}'", ex.getMessage());
-        ApiErrorResponse responseDetails = ApiErrorResponse.builder()
+        ApiErrorModel responseDetails = ApiErrorModel.builder()
                 .errorMessage("'" + ex.getName() + "', with value:" + ex.getValue())
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .build();
@@ -130,7 +128,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiErrorModel> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         log.warn("Validation failed" + ": '{}'", ex.getMessage());
 
         String errorMessage = "Validation failed";
@@ -141,7 +139,7 @@ public class GlobalExceptionHandler {
                         (existing, replacement) -> existing
                 ));
 
-        ApiErrorResponseDetails responseDetails = ApiErrorResponseDetails.builder()
+        ApiErrorModelDetails responseDetails = ApiErrorModelDetails.builder()
                 .errorMessage(errorMessage)
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .errorDetails(errorDetails)
@@ -198,9 +196,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(FeignException.class)
-    public ResponseEntity<ApiErrorResponse> handleFeignClientException(FeignException ex) {
+    public ResponseEntity<ApiErrorModel> handleFeignClientException(FeignException ex) {
         log.warn("{} {}: '{}'", INTERNAL_ERROR_MSG, " when feign execute", ex.getMessage());
-        ApiErrorResponse responseDetails = ApiErrorResponse.builder()
+        ApiErrorModel responseDetails = ApiErrorModel.builder()
                 .errorMessage(ex.getMessage())
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .build();
