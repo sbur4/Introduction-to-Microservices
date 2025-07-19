@@ -17,4 +17,8 @@ public class GetMetadataByIdException extends BaseRuntimeException {
     public GetMetadataByIdException(Map<String, String> errorDetails) {
         super(errorHttpMessage, errorHttpStatusCode, errorDetails);
     }
+
+    public GetMetadataByIdException(String errorMessage) {
+        super(errorMessage, errorHttpStatusCode);
+    }
 }

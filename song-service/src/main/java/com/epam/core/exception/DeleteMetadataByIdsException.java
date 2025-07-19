@@ -14,8 +14,12 @@ public class DeleteMetadataByIdsException extends BaseRuntimeException {
         super(errorHttpMessage, errorHttpStatusCode, errorDetails);
     }
 
-    public DeleteMetadataByIdsException(HttpStatus httpStatus, Map<String, String> errorDetails) {
-        super(errorHttpMessage, httpStatus, errorDetails);
+    public DeleteMetadataByIdsException(String errorMessage) {
+        super(errorMessage, errorHttpStatusCode);
+    }
+
+    public DeleteMetadataByIdsException(HttpStatus httpStatus, String errorMessage) {
+        super(errorMessage, httpStatus);
     }
 
     public DeleteMetadataByIdsException(String errorMessage, Map<String, String> errorDetails) {

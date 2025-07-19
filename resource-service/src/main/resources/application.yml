@@ -12,7 +12,6 @@ spring:
     url: ${POSTGRE_URL:jdbc:postgresql://localhost:5432/resource-db}
     username: ${POSTGRE_USER:postgres}
     password: ${POSTGRE_PASSWORD:postgres}
-#    password: ${POSTGRE_PASSWORD:password12@}
     driver-class-name: org.postgresql.Driver
     hikari:
       auto-commit: true

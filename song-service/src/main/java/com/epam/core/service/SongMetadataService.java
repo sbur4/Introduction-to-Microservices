@@ -65,10 +65,9 @@ public class SongMetadataService {
 
     private void validateIdsForRemoving(List<Integer> idsForRemoving) {
         if (CollectionUtils.isEmpty(idsForRemoving)) {
-            Map<String, String> errorDetails = Collections.singletonMap(RESTRICTION,
-                    "Song metadata with the specified ID's does not exist.");
+            String errorMessage = "Song metadata with the specified ID's: '%s' does not exist.".formatted(idsForRemoving);
             log.error("Restriction: Song metadata with the specified ID's does not exist: '{}'", idsForRemoving);
-            throw new DeleteMetadataByIdsException(HttpStatus.NOT_FOUND, errorDetails);
+            throw new DeleteMetadataByIdsException(HttpStatus.NOT_FOUND, errorMessage);
         }
     }
 
@@ -76,14 +75,17 @@ public class SongMetadataService {
         if (StringUtils.isBlank(requestIds)) {
             Map<String, String> errorDetails = Map.of(RESTRICTION, "CSV string cannot be empty.");
             log.error("Restriction: CSV string cannot be empty.");
-            throw new DeleteMetadataByIdsException("Validation failure", errorDetails);
+//            throw new DeleteMetadataByIdsException("Validation failure", errorDetails);
+            throw new DeleteMetadataByIdsException("CSV string cannot be empty.");
         }
 
         if (requestIds.length() > 200) {
             Map<String, String> errorDetails = Collections.singletonMap(RESTRICTION,
                     "CSV string length must be less than 200 characters.");
             log.error("Restriction: CSV string length must be less than 200 characters. Actual length: '{}'", requestIds.length());
-            throw new DeleteMetadataByIdsException("Actual length: '{%d}'".formatted(requestIds.length()), errorDetails);
+//            throw new DeleteMetadataByIdsException("Actual length: '{%d}'".formatted(requestIds.length()), errorDetails);
+            throw new DeleteMetadataByIdsException("Actual length: '{%d}'. %s".formatted(requestIds.length(),
+                    "CSV string length must be less than 200 characters."));
         }
 
         List<String> invalidIds = Arrays.stream(StringUtils.split(requestIds, ","))
@@ -95,7 +97,8 @@ public class SongMetadataService {
             Map<String, String> errorDetails = Map.of("ids: " + invalidIds,
                     "The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero).");
             log.error("The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{}'", invalidIds);
-            throw new DeleteMetadataByIdsException(errorDetails);
+            throw new DeleteMetadataByIdsException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
+                    .formatted(invalidIds));
         }
     }
 
@@ -123,7 +126,8 @@ public class SongMetadataService {
             Map<String, String> errorDetails = Map.of(RESTRICTION,
                     "The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).");
             log.error("The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).");
-            throw new GetMetadataByIdException(errorDetails);
+            throw new GetMetadataByIdException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
+                    .formatted(requestId));
         }
     }
 

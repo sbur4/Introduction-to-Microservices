@@ -24,6 +24,7 @@ import org.apache.tika.metadata.Metadata;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -84,7 +85,7 @@ public class ResourceService {
             log.info("Successfully deleted metadata by ID's: '{}'", requestIds);
         } catch (FeignException ex) {
             log.error("FeignException occurred while deleting metadata by ID's '{}': {}", requestIds, ex.contentUTF8(), ex);
-            throw new ResourceDeletionException("Failed to delete metadata by ID's: '{%s}'".formatted(requestIds));
+            throw new ResourceDeletionException("Failed to delete metadata by ID's: '%s'".formatted(requestIds));
         }
     }
 
@@ -93,7 +94,8 @@ public class ResourceService {
             Map<String, String> errorDetails = Collections.singletonMap("Restriction",
                     "Song with the specified ID's does not exist: '{%s}'".formatted(idsForRemoving));
             log.error("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
-            throw new DeleteSongAndMetadataByIdsException(HttpStatus.NOT_FOUND, errorDetails);
+            throw new DeleteSongAndMetadataByIdsException(
+                    "Song with the specified ID's: '%s' does not exist.".formatted(idsForRemoving), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -101,14 +103,15 @@ public class ResourceService {
         if (StringUtils.isBlank(requestIds)) {
             Map<String, String> errorDetails = Map.of("Restriction", "CSV string cannot be empty.");
             log.error("Restriction: CSV string cannot be empty.");
-            throw new DeleteSongAndMetadataByIdsException(errorDetails);
+            throw new DeleteSongAndMetadataByIdsException("CSV string cannot be empty.");
         }
 
         if (requestIds.length() > 200) {
             Map<String, String> errorDetails = Collections.singletonMap("Restriction",
                     "CSV string length must be less than 200 characters.");
             log.error("Restriction: CSV string length must be less than 200 characters. Actual length: '{}'", requestIds.length());
-            throw new DeleteSongAndMetadataByIdsException("Actual length: '{%d}'".formatted(requestIds.length()), errorDetails);
+            throw new DeleteSongAndMetadataByIdsException("Actual length: '%d'. %s".formatted(requestIds.length(),
+                    "CSV string length must be less than 200 characters."));
         }
 
         List<String> invalidIds = Arrays.stream(StringUtils.split(requestIds, ","))
@@ -120,7 +123,8 @@ public class ResourceService {
             Map<String, String> errorDetails = Map.of("ID's: %s".formatted(invalidIds),
                     "The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero).");
             log.error("The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{%s}'".formatted(invalidIds));
-            throw new DeleteSongAndMetadataByIdsException(errorDetails);
+            throw new DeleteSongAndMetadataByIdsException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
+                    .formatted(invalidIds));
         }
     }
 
@@ -150,12 +154,12 @@ public class ResourceService {
             Map<String, String> errorDetails = Map.of("ID: %s".formatted(requestId),
                     "The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).");
             log.error("The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero): %s".formatted(requestId));
-            throw new GetSongByIdException(errorDetails);
+            throw new GetSongByIdException("The provided ID: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
+                    .formatted(requestId));
         }
     }
 
-    //    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     public UploadedSongResponseDto saveSongAndMetadata(final byte[] audioFile) {
         log.debug("Starting saving song and metadata.");
 
@@ -188,13 +192,15 @@ public class ResourceService {
         } catch (FeignException ex) {
             log.error("Failed to save metadata for song ID '{}': {}", songId, ex.contentUTF8());
             Map<String, String> errorDetails = Map.of("ID: '{%d}'".formatted(songId), "Failed to save metadata for song.");
-            throw new ResourceDeletionException("Failed to save metadata.", errorDetails);
+            throw new ResourceDeletionException("Failed to save metadata with resource ID: '%s'.".formatted(songId));
         }
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED)
     private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        Example<Song> songExample = Example.of(rawSong);
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withMatcher("data", ExampleMatcher.GenericPropertyMatcher::exact);
+        Example<Song> songExample = Example.of(rawSong, matcher);
         boolean isExists = resourceRepository.exists(songExample);
 
         if (isExists) {
@@ -202,7 +208,7 @@ public class ResourceService {
                     songMetadataRequestDto.getName(), songMetadataRequestDto.getArtist());
             log.error("Duplicate song detected: '{}'", songInfo);
             Map<String, String> errorDetails = Map.of("Song info", songInfo);
-            throw new SongAlreadyExistException("Song already exists.", errorDetails);
+            throw new SongAlreadyExistException("Song already exist with info: '%s'.".formatted(songInfo));
         }
     }
 

@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorModel> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         log.warn("Exception encountered: '{}'", ex.getMessage());
         ApiErrorModel responseDetails = ApiErrorModel.builder()
-                .errorMessage("'" + ex.getName() + "', with value:" + ex.getValue())
+                .errorMessage("Validation failure for input string: '%s', with value: '%s'".formatted(ex.getName(), ex.getValue()))
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .build();
         return new ResponseEntity<>(responseDetails, HttpStatus.BAD_REQUEST);
@@ -109,7 +109,7 @@ public class GlobalExceptionHandler {
 
                     return paramResult.getResolvableErrors().stream()
                             .map(resolvableError -> Map.entry(
-                                    "Parameter '{%s}' with value '{%s}'".formatted(parameterName, argString),
+                                    "Parameter '{%s}' with value '{%s}' ".formatted(parameterName, argString),
                                     resolvableError.getDefaultMessage()
                             ));
                 })
@@ -120,9 +120,9 @@ public class GlobalExceptionHandler {
                 ));
 
         ApiErrorModelDetails responseDetails = ApiErrorModelDetails.builder()
-                .errorMessage(VALIDATION_FAILED)
+                .errorMessage(VALIDATION_FAILED + ": " + errorDetails)
                 .errorCode(HttpStatus.BAD_REQUEST.value())
-                .errorDetails(errorDetails)
+//                .errorDetails(errorDetails)
                 .build();
         return new ResponseEntity<>(responseDetails, HttpStatus.BAD_REQUEST);
     }
@@ -134,7 +134,8 @@ public class GlobalExceptionHandler {
         String errorMessage = "Validation failed";
         Map<String, String> errorDetails = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
-                        fieldError -> "Field: '{%s}' with value: '{%s}'".formatted(fieldError.getField(), fieldError.getRejectedValue()),
+//                        fieldError -> "Field: '{%s}' with value: '{%s}'".formatted(fieldError.getField(), fieldError.getRejectedValue()),
+                        FieldError::getField,
                         FieldError::getDefaultMessage,
                         (existing, replacement) -> existing
                 ));

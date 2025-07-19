@@ -13,15 +13,15 @@ public class SongMetadataRequestDto {
     @Min(value = 1, message = "Numeric, must match an existing Resource ID.")
     int id;
 
-    @NotBlank(message = "Must match an existing Track Name.")
+    @NotBlank(message = "Name cannot be blank.")
     @Size(min = 1, max = 100, message = "Track name must contains 1-100 characters text.")
     String name;
 
-    @NotBlank(message = "Must match an existing Artist Name.")
+    @NotBlank(message = "Artist cannot be blank.")
     @Size(min = 1, max = 100, message = "Artist name must contains 1-100 characters text.")
     String artist;
 
-    @NotBlank(message = "Must match an existing Album Name.")
+    @NotBlank(message = "Album cannot be blank.")
     @Size(min = 1, max = 100, message = "Album name must contains 1-100 characters text.")
     String album;
 
@@ -30,5 +30,6 @@ public class SongMetadataRequestDto {
     String duration;
 
     @Pattern(regexp = "^(19|20)\\d{2}$", message = "YYYY format between 1900-2099.")
+    @NotBlank(message = "Year cannot be blank.")
     String year;
 }
