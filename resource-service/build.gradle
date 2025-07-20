@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.register('wrapper', Wrapper) {
+    gradleVersion = '8.14'
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+springBoot {
+    mainClass = "com.epam.ResourceServiceApp"
+}
+
+ext {
+    versions = [
+            spring_boot         : '3.5.3',
+            tika                : '3.2.1',
+            commons_lang3       : '3.18.0',
+            commons_collections4: '4.5.0',
+            postgresql          : '42.7.7',
+            openfeign           : '4.3.0',
+            retry               : '3.3.0',
+            feign_jackson       : '13.6',
+            resilience4j       : '2.3.0'
+    ]
+}
+
+group = 'com.epam'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+    implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+
+    implementation "org.springframework.cloud:spring-cloud-starter-openfeign:${versions.openfeign}"
+    implementation "org.springframework.cloud:spring-cloud-circuitbreaker-spring-retry:${versions.retry}"
+    implementation "org.springframework.cloud:spring-cloud-circuitbreaker-resilience4j:${versions.retry}"
+    implementation "io.github.resilience4j:resilience4j-spring-boot3:${versions.resilience4j}"
+    implementation "io.github.resilience4j:resilience4j-feign:${versions.resilience4j}"
+    implementation "io.github.openfeign:feign-jackson:${versions.feign_jackson}"
+
+    implementation "org.postgresql:postgresql:${versions.postgresql}"
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation "org.apache.tika:tika-core:${versions.tika}"
+    implementation "org.apache.tika:tika-parser-audiovideo-module:${versions.tika}"
+
+    implementation "org.apache.commons:commons-lang3:${versions.commons_lang3}"
+    implementation "org.apache.commons:commons-collections4:${versions.commons_collections4}"
+    implementation 'org.apache.commons:commons-math4-core:4.0-beta1'
+}
+
+tasks.named('jar') {
+    enabled = false
+}

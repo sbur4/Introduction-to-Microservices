@@ -1,0 +1,83 @@
+server:
+  port: ${SERVER_PORT:8072}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/}
+  shutdown: graceful
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    url: ${POSTGRE_URL:jdbc:postgresql://localhost:5433/song-db}
+    username: ${POSTGRE_USER:postgres}
+    password: ${POSTGRE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: true
+      connection-timeout: 30000
+      maximum-pool-size: 20
+      minimum-idle: 5
+      pool-name: SongHikariPool
+      max-lifetime: 1800000
+      leak-detection-threshold: 10000
+    testWhileIdle: true
+    validationQuery: SELECT 1
+
+  jpa:
+    open-in-view: true
+    show-sql: true
+    generate-ddl: true
+    properties:
+      jakarta.persistence.validation.mode: none
+      ddl-auto: update
+      format_sql: true
+      jdbc:
+        batch_size: 20
+        order_inserts: true
+        order_updates: true
+      query:
+        in_clause_parameter_padding: true
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: update
+
+  application:
+    name: song-service
+
+logging:
+  pattern:
+    console: '%highlight(%-5p) | %magenta(%d{ISO8601}{GMT}) | %cyan(%c) | %yellow(%m%ex%n)'
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: DEBUG
+        web.servlet.mvc.method.annotation: DEBUG
+        transaction: DEBUG
+        orm.jpa: DEBUG
+        jdbc: DEBUG
+    hibernate:
+      SQL: DEBUG
+      type: TRACE
+      orm:
+        transaction: DEBUG
+        jdbc:
+          datasource: DEBUG
+          bind: TRACE
+          extract: TRACE
+    postgresql: DEBUG
+  com:
+    epam: TRACE
+    zaxxer.hikari: DEBUG
+
+app:
+  async:
+    min-core-pool-size: 4
+    max-pool-multiplier: 2
+    thread-timeout: 60
+    queue-capacity-multiplier: 50
+    thread-name-prefix: 'metadata-service-async-exec-'
+    keep-alive: 30
+    async-request-timeout: 30000
+    shutdown-wait-time: 30
