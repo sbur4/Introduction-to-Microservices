@@ -3,7 +3,7 @@ package com.epam.web.feign.fallback;
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
 import com.epam.core.dto.response.SongMetadataIdResponseDto;
-import com.epam.web.feign.SongServiceFeignClient;
+import com.epam.web.feign.client.SongServiceFeignClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 

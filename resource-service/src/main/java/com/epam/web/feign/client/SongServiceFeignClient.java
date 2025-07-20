@@ -1,4 +1,4 @@
-package com.epam.web.feign;
+package com.epam.web.feign.client;
 
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;

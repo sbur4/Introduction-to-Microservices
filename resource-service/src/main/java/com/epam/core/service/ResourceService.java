@@ -12,7 +12,7 @@ import com.epam.core.extractor.impl.MetadataExtractorImpl;
 import com.epam.core.util.AudioParserUtil;
 import com.epam.data.entity.Song;
 import com.epam.data.repository.ResourceRepository;
-import com.epam.web.feign.SongServiceFeignClient;
+import com.epam.web.feign.client.SongServiceFeignClient;
 import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
