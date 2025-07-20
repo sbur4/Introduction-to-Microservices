@@ -12,10 +12,12 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@EqualsAndHashCode(of = "data")
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @Entity

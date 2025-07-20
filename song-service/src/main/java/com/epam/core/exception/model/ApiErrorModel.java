@@ -1,6 +1,7 @@
 package com.epam.core.exception.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
@@ -11,6 +12,9 @@ import lombok.experimental.SuperBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiErrorModel {
 
-    private final String errorMessage;
-    private final int errorCode;
+    @JsonProperty("errorMessage")
+    private String errorMessage;
+
+    @JsonProperty("errorCode")
+    private int errorCode;
 }

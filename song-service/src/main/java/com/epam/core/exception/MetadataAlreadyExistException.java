@@ -13,4 +13,8 @@ public class MetadataAlreadyExistException extends BaseRuntimeException {
     public MetadataAlreadyExistException(String errorMessage, Map<String, String> errorDetails) {
         super(errorMessage, errorHttpStatusCode, errorDetails);
     }
+
+    public MetadataAlreadyExistException(String errorMessage) {
+        super(errorMessage, errorHttpStatusCode);
+    }
 }

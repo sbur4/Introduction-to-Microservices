@@ -6,31 +6,39 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 public class DurationValidator implements ConstraintValidator<DurationValidationConstraint, String> {
 
     private static final String DURATION_FORMAT_REGEX = "^\\d{2}:\\d{2}$";
 
+    private static final Function<String, Integer> PARSE_INT = Integer::parseInt;
+    private static final Predicate<Integer> IS_VALID_TIME  = i -> i < 0 || i > 59;
+
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (StringUtils.isBlank(value)) {
+        final String trimmedString = StringUtils.strip(value);
+
+        if (StringUtils.isBlank(trimmedString)) {
             buildConstraintViolation(context, "Duration cannot be blank.");
             return false;
         }
 
-        if (value.length() != 5 || !value.matches(DURATION_FORMAT_REGEX)) {
+        if (trimmedString.length() != 5 || !trimmedString.matches(DURATION_FORMAT_REGEX)) {
             buildConstraintViolation(context, "Duration must be in mm:ss format with leading zeros (e.g., 05:30).");
             return false;
         }
 
-        String minutesStr = value.substring(0, 2);
-        String secondsStr = value.substring(3, 5);
+        String minutesStr = trimmedString.substring(0, 2);
+        String secondsStr = trimmedString.substring(3, 5);
 
         if (!NumberUtils.isParsable(minutesStr)) {
             buildConstraintViolation(context, "Minutes must be numeric.");
             return false;
         }
-        int minutes = Integer.parseInt(minutesStr);
-        if (minutes < 0 || minutes > 59) {
+        int minutes = PARSE_INT.apply(minutesStr);
+        if (IS_VALID_TIME.test(minutes)) {
             buildConstraintViolation(context, "Minutes must be between 00 and 59.");
             return false;
         }
@@ -39,8 +47,8 @@ public class DurationValidator implements ConstraintValidator<DurationValidation
             buildConstraintViolation(context, "Seconds must be numeric.");
             return false;
         }
-        int seconds = Integer.parseInt(secondsStr);
-        if (seconds < 0 || seconds > 59) {
+        int seconds = PARSE_INT.apply(secondsStr);
+        if (IS_VALID_TIME.test(seconds)) {
             buildConstraintViolation(context, "Seconds must be between 00 and 59.");
             return false;
         }

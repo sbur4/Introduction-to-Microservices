@@ -20,7 +20,7 @@ spring:
       minimum-idle: 5
       pool-name: ResourceHikariPool
       max-lifetime: 1800000
-#      leak-detection-threshold: 10000
+  #      leak-detection-threshold: 10000
 
   jpa:
     open-in-view: true
@@ -101,15 +101,43 @@ resilience4j:
           - java.util.concurrent.TimeoutException
         ignore-exceptions:
           - org.springframework.web.client.HttpClientErrorException
+
+  ratelimiter:
+    instances:
+      song-service:
+        registerHealthIndicator: true
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0s
+
   retry:
     instances:
-      songService:
-        max-attempts: 3
-        wait-duration: 2s
-        retry-exceptions:
-          - org.springframework.web.client.HttpServerErrorException
+      song-service:
+        maxAttempts: 3
+        waitDuration: 500ms
+        retryExceptions:
+          - org.springframework.web.client.ResourceAccessException
           - java.io.IOException
-  timelimiter:
-    instances:
-      songService:
-        timeout-duration: 5s
+        ignoreExceptions:
+          - com.epam.core.exception.ResourceDeletionException
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: full
+      song-service:
+        connectTimeout: 3000
+        readTimeout: 8000
+
+app:
+  async:
+    min-core-pool-size: 4
+    max-pool-multiplier: 2
+    thread-timeout: 60
+    queue-capacity-multiplier: 50
+    thread-name-prefix: 'song-service-async-exec-'
+    keep-alive: 30
+    async-request-timeout: 30000
+    shutdown-wait-time: 30

@@ -21,25 +21,19 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED, propagation = Propagation.SUPPORTS)
 public class SongMetadataService {
-
-    private static final String RESTRICTION = "Restriction";
 
     private final SongMetadataRepository metadataRepository;
     private final ConversionService conversionService;
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE,
-            rollbackFor = DeleteMetadataByIdsException.class
-    )
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public DeletedByIdsResponseDto deleteMetadataByIds(final String requestIds) {
         log.debug("Starting delete metadata by ID's: '{}'", requestIds);
 
@@ -73,17 +67,12 @@ public class SongMetadataService {
 
     private void validateRequestIds(String requestIds) {
         if (StringUtils.isBlank(requestIds)) {
-            Map<String, String> errorDetails = Map.of(RESTRICTION, "CSV string cannot be empty.");
             log.error("Restriction: CSV string cannot be empty.");
-//            throw new DeleteMetadataByIdsException("Validation failure", errorDetails);
             throw new DeleteMetadataByIdsException("CSV string cannot be empty.");
         }
 
         if (requestIds.length() > 200) {
-            Map<String, String> errorDetails = Collections.singletonMap(RESTRICTION,
-                    "CSV string length must be less than 200 characters.");
-            log.error("Restriction: CSV string length must be less than 200 characters. Actual length: '{}'", requestIds.length());
-//            throw new DeleteMetadataByIdsException("Actual length: '{%d}'".formatted(requestIds.length()), errorDetails);
+            log.error("Restriction: CSV string length must be less than 200 characters. Actual length: '{}'.", requestIds.length());
             throw new DeleteMetadataByIdsException("Actual length: '{%d}'. %s".formatted(requestIds.length(),
                     "CSV string length must be less than 200 characters."));
         }
@@ -94,21 +83,19 @@ public class SongMetadataService {
                 .toList();
 
         if (CollectionUtils.isNotEmpty(invalidIds)) {
-            Map<String, String> errorDetails = Map.of("ids: " + invalidIds,
-                    "The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero).");
-            log.error("The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{}'", invalidIds);
+            log.error("Restriction: The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{}'.", invalidIds);
             throw new DeleteMetadataByIdsException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
                     .formatted(invalidIds));
         }
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED, readOnly = true)
+    @Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.REPEATABLE_READ, readOnly = true)
     public SongMetadataResponseDto getMetadataById(final Integer requestId) {
         log.debug("Fetching song metadata for ID: '{}'", requestId);
 
         validateRequestId(requestId);
 
-        SongMetadata fetchedSongMetadata = metadataRepository.findByResourceId(requestId)
+        SongMetadata fetchedSongMetadata = getSongMetadata(requestId)
                 .orElseThrow(() -> {
                     log.error("Song metadata with the specified ID '{}' does not exist.", requestId);
                     return new GetMetadataByIdException(
@@ -121,19 +108,19 @@ public class SongMetadataService {
         return responseDto;
     }
 
+    private Optional<SongMetadata> getSongMetadata(Integer requestId) {
+        return metadataRepository.findByResourceId(requestId);
+    }
+
     private void validateRequestId(Integer requestId) {
         if (Objects.isNull(requestId) || requestId <= 0) {
-            Map<String, String> errorDetails = Map.of(RESTRICTION,
-                    "The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).");
-            log.error("The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero).");
-            throw new GetMetadataByIdException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
+            log.error("The provided ID: '{}' is invalid (e.g., contains letters, decimals, is negative, or zero).", requestId);
+            throw new GetMetadataByIdException("The provided ID: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
                     .formatted(requestId));
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ, timeout = 10,
-            rollbackFor = MetadataAlreadyExistException.class
-    )
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public SongMetadataIdResponseDto saveMetadata(SongMetadataRequestDto requestDto) {
         log.debug("Starting saving metadata with ID: '{}'", requestDto.getId());
 
@@ -148,12 +135,12 @@ public class SongMetadataService {
     }
 
     private void validateRequestDto(SongMetadataRequestDto requestDto) {
-        boolean isMetadataExist = metadataRepository.findByResourceId(requestDto.getId()).isPresent();
+        boolean isMetadataExist = getSongMetadata(requestDto.getId())
+                .isPresent();
+
         if (isMetadataExist) {
-            Map<String, String> errorDetails = Map.of("id: '{%d}'".formatted(requestDto.getId()),
-                    "Metadata for this ID already exists.");
             log.error("Metadata existence check for ID '{}': '{}'", requestDto.getId(), isMetadataExist);
-            throw new MetadataAlreadyExistException("Metadata already exists for the given ID: '%d'".formatted(requestDto.getId()), errorDetails);
+            throw new MetadataAlreadyExistException("Metadata already exists for the given ID: '%d'".formatted(requestDto.getId()));
         }
     }
 }

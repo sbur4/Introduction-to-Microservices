@@ -13,7 +13,7 @@ import java.util.function.Function;
 public class BaseRuntimeException extends RuntimeException implements HttpStatusException {
 
     private static HttpStatus HTTP_STATUS = HttpStatus.INTERNAL_SERVER_ERROR;
-    private static Function<Integer, HttpStatus> httpStatusResolver = errorCode -> HttpStatus.resolve(errorCode);
+    private static final Function<Integer, HttpStatus> httpStatusResolver = errorCode -> HttpStatus.resolve(errorCode);
 
     private final ApiErrorModel apiErrorModel;
 
@@ -27,12 +27,12 @@ public class BaseRuntimeException extends RuntimeException implements HttpStatus
 
     public BaseRuntimeException(@NonNull final ApiErrorModel apiErrorModel) {
         this.apiErrorModel = apiErrorModel;
-        this.HTTP_STATUS = HttpStatus.resolve(apiErrorModel.getErrorCode());
+        HTTP_STATUS = HttpStatus.resolve(apiErrorModel.getErrorCode());
     }
 
     public BaseRuntimeException(@NonNull String message, int errorCode) {
         super(message);
-        this.HTTP_STATUS = httpStatusResolver.apply(errorCode);
+        HTTP_STATUS = httpStatusResolver.apply(errorCode);
         this.apiErrorModel = ApiErrorModel.builder()
                 .errorMessage(message)
                 .errorCode(errorCode)
@@ -41,7 +41,7 @@ public class BaseRuntimeException extends RuntimeException implements HttpStatus
 
     public BaseRuntimeException(@NonNull String message, @NonNull HttpStatus errorCode) {
         super(message);
-        this.HTTP_STATUS = errorCode;
+        HTTP_STATUS = errorCode;
         this.apiErrorModel = ApiErrorModel.builder()
                 .errorMessage(message)
                 .errorCode(errorCode.value())
@@ -50,7 +50,7 @@ public class BaseRuntimeException extends RuntimeException implements HttpStatus
 
     public BaseRuntimeException(@NonNull String message, @NonNull HttpStatus errorCode, @NonNull Map<String, String> errorDetails) {
         super(message);
-        this.HTTP_STATUS = errorCode;
+        HTTP_STATUS = errorCode;
         this.apiErrorModel = ApiErrorModelDetails.builder()
                 .errorMessage(message)
                 .errorCode(errorCode.value())
@@ -60,7 +60,7 @@ public class BaseRuntimeException extends RuntimeException implements HttpStatus
 
     public BaseRuntimeException(@NonNull String message, int errorCode, @NonNull Map<String, String> errorDetails) {
         super(message);
-        this.HTTP_STATUS = httpStatusResolver.apply(errorCode);
+        HTTP_STATUS = httpStatusResolver.apply(errorCode);
         this.apiErrorModel = ApiErrorModelDetails.builder()
                 .errorMessage(message)
                 .errorCode(errorCode)
@@ -76,7 +76,6 @@ public class BaseRuntimeException extends RuntimeException implements HttpStatus
                 .errorDetails(errorDetails)
                 .build();
     }
-
 
     @Override
     public HttpStatus getHttpStatus() {

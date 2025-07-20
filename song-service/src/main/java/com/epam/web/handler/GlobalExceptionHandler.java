@@ -131,11 +131,11 @@ public class GlobalExceptionHandler {
                         (existingValue, newValue) -> existingValue + " | " + newValue
                 ));
 
-        ApiErrorModelDetails responseDetails = ApiErrorModelDetails.builder()
+        ApiErrorModelDetails response = ApiErrorModelDetails.builder()
                 .errorMessage(VALIDATION_FAILED)
                 .errorCode(HttpStatus.BAD_REQUEST.value())
                 .errorDetails(errorDetails)
                 .build();
-        return new ResponseEntity<>(responseDetails, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }
