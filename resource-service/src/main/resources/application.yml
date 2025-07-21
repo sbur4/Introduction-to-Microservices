@@ -1,5 +1,6 @@
 server:
-  port: ${SERVER_PORT:8071}
+#  port: ${SERVER_PORT:8071}
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: ${SERVER_CONTEXT_PATH:/}
     shutdown: graceful
@@ -9,9 +10,10 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-    url: ${POSTGRE_URL:jdbc:postgresql://localhost:5432/resource-db}
-    username: ${POSTGRE_USER:postgres}
-    password: ${POSTGRE_PASSWORD:postgres}
+#    url: ${RESOURCE_DB_URL:jdbc:postgresql://localhost:5432/resource-db}
+    url: ${SPRING_DATASOURCE_URL://localhost:5432/resource-db}
+    username: ${RESOURCE_POSTGRES_USER:postgres}
+    password: ${RESOURCE_POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       auto-commit: true
@@ -25,9 +27,11 @@ spring:
   jpa:
     open-in-view: true
     show-sql: true
-    generate-ddl: true
+#    generate-ddl: true
+    generate-ddl: false
     properties:
-      ddl-auto: update
+#      ddl-auto: update
+      ddl-auto: none
       format_sql: true
       jdbc:
         batch_size: 20
@@ -37,6 +41,7 @@ spring:
         in_clause_parameter_padding: true
   hibernate:
     connection.provider_disables_autocommit: true
+    ddl-auto: none
 
   application:
     name: resource-service
@@ -81,7 +86,9 @@ logging:
 song:
   service:
     name: song-service
-    base-url: http://localhost:8072/songs
+#    base-url: http://localhost:8072/songs
+#    base-url: http://localhost:8081/songs
+    base-url: ${SONG_SERVICE_URL:http://localhost:8072/songs}
 
 resilience4j:
   circuitbreaker:

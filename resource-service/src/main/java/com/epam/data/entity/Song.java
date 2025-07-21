@@ -23,8 +23,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "songs",
-        uniqueConstraints = @UniqueConstraint(columnNames = "id"),
-        indexes = @Index(columnList = "id")
+        uniqueConstraints = @UniqueConstraint(columnNames = "checksum"),
+        indexes = {@Index(columnList = "id"), @Index(columnList = "checksum")}
 )
 public class Song {
 
@@ -34,6 +34,8 @@ public class Song {
 
     @Lob
     @Column(name = "data")
-//    @Column(name = "data", columnDefinition = "BYTEA")
     private byte[] data;
+
+    @Column(name = "checksum", updatable = false, nullable = false, unique = true)
+    private String checksum;
 }

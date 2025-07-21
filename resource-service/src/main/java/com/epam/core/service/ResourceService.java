@@ -18,13 +18,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.metadata.Metadata;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -32,6 +31,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -162,7 +162,10 @@ public class ResourceService {
 
         SongMetadataRequestDto songMetadataRequestDto = metadataExtractor.extractData(audioMetadata);
 
-        Song rawSong = Song.builder().data(audioFile).build();
+        Song rawSong = Song.builder()
+                .data(audioFile)
+                .checksum(generateChecksum(audioFile))
+                .build();
 
         validateSongIsExist(rawSong, songMetadataRequestDto);
 
@@ -186,11 +189,13 @@ public class ResourceService {
     }
 
     private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withMatcher("data", ExampleMatcher.GenericPropertyMatcher::exact);
-        Example<Song> songExample = Example.of(rawSong, matcher);
+//        ExampleMatcher matcher = ExampleMatcher.matching()
+//                .withMatcher("data", ExampleMatcher.GenericPropertyMatcher::exact);
+//        Example<Song> songExample = Example.of(rawSong, matcher);
+//
+//        boolean isExists = resourceRepository.exists(songExample);
 
-        boolean isExists = resourceRepository.exists(songExample);
+        boolean isExists = resourceRepository.checkExistenceByChecksum(rawSong.getChecksum());
 
         if (isExists) {
             String songInfo = String.format("Name: %s, Artist: %s",
@@ -198,6 +203,11 @@ public class ResourceService {
             log.error("Duplicate song detected: '{}'", songInfo);
             throw new SongAlreadyExistException("Song already exist with info: '%s'.".formatted(songInfo));
         }
+    }
+
+    private static String generateChecksum(byte[] rawSong) {
+        byte[] hashBytes = DigestUtils.sha256(rawSong);
+        return Base64.getEncoder().encodeToString(hashBytes);
     }
 
     private void validateBinaryData(byte[] audioFile) {

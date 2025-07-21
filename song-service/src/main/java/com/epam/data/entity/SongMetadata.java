@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
         indexes = @Index(columnList = "resourceId")
 )
 public class SongMetadata {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
