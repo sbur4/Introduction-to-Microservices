@@ -8,6 +8,15 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
+  cloud:
+    discovery:
+      enabled: true
+      locator:
+        enabled: true
+    loadbalancer:
+      client:
+        enabled: true
+
   datasource:
     url: ${POSTGRE_URL:jdbc:postgresql://localhost:5432/resource-db}
     username: ${POSTGRE_USER:postgres}
@@ -52,6 +61,16 @@ logging:
         web.servlet.mvc.method.annotation: DEBUG
         transaction: DEBUG
         orm.jpa: DEBUG
+        retry: DEBUG
+        cloud:
+          loadbalancer: DEBUG
+          client:
+            loadbalancer: DEBUG
+            core: DEBUG
+            cache: DEBUG
+            blocking: DEBUG
+            reactive: DEBUG
+            retry: DEBUG
     hibernate:
       SQL: DEBUG
       type: TRACE
@@ -64,6 +83,9 @@ logging:
   com:
     epam: TRACE
     zaxxer.hikari: DEBUG
+    netflix:
+      eureka: DEBUG
+      discovery: DEBUG
 
   feign: DEBUG
   feign.Request: DEBUG
@@ -86,7 +108,7 @@ song:
 resilience4j:
   circuitbreaker:
     instances:
-      songService:
+      song-service:
         register-health-indicator: true
         sliding-window-type: TIME_BASED
         sliding-window-size: 10
@@ -141,3 +163,14 @@ app:
     keep-alive: 30
     async-request-timeout: 30000
     shutdown-wait-time: 30
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
+    prefer-ip-address: true

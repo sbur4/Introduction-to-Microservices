@@ -1,0 +1,91 @@
+server:
+  port: ${SERVER_PORT:8761}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/}
+  shutdown: graceful
+  jetty:
+    threads:
+      max: 200
+      min: 10
+      idle-timeout: 60000
+    connection-idle-timeout: 30000
+#    max-http-post-size: 2MB
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  application:
+    name: netflix-eureka-server
+
+  cloud:
+    loadbalancer:
+      cache:
+        enabled: true
+        capacity: 1000
+        ttl: 30s
+        stats: true
+      configurations: caffeine
+      services: resource-service,song-service
+
+  cache:
+    cache-names: resource-cache, song-cache
+
+  retry:
+    max-attempts: 3
+    backoff:
+      initial: 100ms
+      multiplier: 2.0
+      max: 2000ms
+
+logging:
+  pattern:
+    console: '%highlight(%-5p) | %magenta(%d{ISO8601}{GMT}) | %cyan(%c) | %yellow(%m%ex%n)'
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: DEBUG
+        web.servlet.mvc.method.annotation: DEBUG
+        retry: DEBUG
+        cloud:
+          loadbalancer: DEBUG
+          client:
+            loadbalancer: DEBUG
+            core: DEBUG
+            cache: DEBUG
+            blocking: DEBUG
+            reactive: DEBUG
+            retry: DEBUG
+  com:
+    epam: TRACE
+    netflix:
+      eureka: DEBUG
+      discovery: DEBUG
+      eureka.registry: TRACE
+    github.benmanes.caffeine: WARN
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    #      defaultZone: http://${eureka.instance.hostname}:${server.port}
+    registerWithEureka: false
+    fetchRegistry: false
+  server:
+    enableSelfPreservation: false
+    eviction-interval-timer-in-ms: 5000
+    viction-interval-timer-in-ms: 5000
+    response-cache-update-interval-ms: 30000
+    peer-eureka-nodes-update-interval-ms: 10000
+    retention-time-in-m-s-in-delta-queue: 30000
+    delta-retention-timer-interval-in-ms: 30000
+    use-read-only-response-cache: true
+    wait-time-in-ms-when-sync-empty: 0
+    max-threads-for-peer-replication: 20
+    max-threads-for-status-replication: 10
+    min-available-instances-for-peer-replication: -1
+  instance:
+    prefer-ip-address: true # false The replica size seems to be empty. Check the route 53 DNS Registry
+    lease-renewal-interval-in-seconds: 5 # RENEWALS ARE LESSER THAN THE THRESHOLD
+    lease-expiration-duration-in-seconds: 15 # RENEWALS ARE LESSER THAN THE THRESHOLD
