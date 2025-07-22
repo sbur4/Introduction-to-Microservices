@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8075}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/}
+  shutdown: graceful
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  cloud:
+    discovery:
+      locator:
+        enabled: true
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: resource-service
+              uri: lb://resource-service
+              #              uri: http://localhost:8071
+              predicates:
+                - Path=/resources/**
+            - id: song-service
+              uri: lb://song-service
+              #              uri: http://localhost:8072
+              predicates:
+                - Path=/songs/**
+
+  application:
+    name: api-gateway-service
+
+logging:
+  pattern:
+    console: '%highlight(%-5p) | %magenta(%d{ISO8601}{GMT}) | %cyan(%c) | %yellow(%m%ex%n)'
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: DEBUG
+        web.servlet.mvc.method.annotation: DEBUG
+        cloud:
+          loadbalancer: DEBUG
+          client:
+            loadbalancer: DEBUG
+            core: DEBUG
+            cache: DEBUG
+            blocking: DEBUG
+            reactive: DEBUG
+            retry: DEBUG
+  com:
+    epam: TRACE
+    zaxxer.hikari: DEBUG
+    netflix:
+      eureka: DEBUG
+      discovery: DEBUG
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
+    prefer-ip-address: true

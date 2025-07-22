@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+// Database per service design pattern
 @Repository
 public interface ResourceRepository extends JpaRepository<Song, Integer> {
 

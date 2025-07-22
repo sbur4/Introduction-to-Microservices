@@ -43,8 +43,8 @@ public class SongMetadataService {
                 .map(StringUtils::strip)
                 .map(Integer::parseInt)
                 .toList();
-
         log.debug("Validated and parsed ID's: '{}'", splittedIds);
+
         List<Integer> idsForRemoving = metadataRepository.findExistingIdsByResourceIdIn(splittedIds);
 
 //        validateIdsForRemoving(idsForRemoving);
