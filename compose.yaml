@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${RESOURCE_POSTGRES_USER}
       POSTGRES_PASSWORD: ${RESOURCE_POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"  # Maps container port 5432 to host port 5432
+      - "5432:5432"
     volumes:
       - ./init-scripts/resource-db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
@@ -19,7 +19,7 @@ services:
       POSTGRES_USER: ${SONG_POSTGRES_USER}
       POSTGRES_PASSWORD: ${SONG_POSTGRES_PASSWORD}
     ports:
-      - "5433:5432"  # Maps container port 5432 to host port 5433 (to avoid conflict)
+      - "5433:5432"
     volumes:
       - ./init-scripts/song-db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
@@ -44,14 +44,3 @@ services:
     ports:
       - "8072:8081"
 
-# Related settings for application.properties:
-#
-# For resource-service:
-# spring.datasource.url=jdbc:postgresql://localhost:5432/resource-db
-# spring.datasource.username=postgres
-# spring.datasource.password=postgres
-#
-# For song-service:
-# spring.datasource.url=jdbc:postgresql://localhost:5433/song-db
-# spring.datasource.username=postgres
-# spring.datasource.password=postgres

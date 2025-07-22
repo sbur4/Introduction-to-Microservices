@@ -3,7 +3,6 @@ package com.epam.core.service;
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
 import com.epam.core.dto.response.UploadedSongResponseDto;
-import com.epam.core.exception.AudioDataException;
 import com.epam.core.exception.DeleteSongAndMetadataByIdsException;
 import com.epam.core.exception.GetSongByIdException;
 import com.epam.core.exception.ResourceDeletionException;
@@ -87,14 +86,6 @@ public class ResourceService {
         }
     }
 
-    private void validateIdsForRemoving(List<Integer> idsForRemoving) {
-        if (CollectionUtils.isEmpty(idsForRemoving)) {
-            log.error("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
-            throw new DeleteSongAndMetadataByIdsException(
-                    "Song with the specified ID's: '%s' does not exist.".formatted(idsForRemoving), HttpStatus.NOT_FOUND);
-        }
-    }
-
     private void validateRequestIds(String requestIds) {
         if (StringUtils.isBlank(requestIds)) {
             log.error("Restriction: CSV string cannot be empty.");
@@ -153,7 +144,6 @@ public class ResourceService {
     public UploadedSongResponseDto saveSongAndMetadata(final byte[] audioFile) {
         log.debug("Starting saving song and metadata.");
 
-//        validateBinaryData(audioFile);
         if (audioFile == null || audioFile.length == 0) {
             return new UploadedSongResponseDto();
         }
@@ -189,12 +179,6 @@ public class ResourceService {
     }
 
     private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-//        ExampleMatcher matcher = ExampleMatcher.matching()
-//                .withMatcher("data", ExampleMatcher.GenericPropertyMatcher::exact);
-//        Example<Song> songExample = Example.of(rawSong, matcher);
-//
-//        boolean isExists = resourceRepository.exists(songExample);
-
         boolean isExists = resourceRepository.checkExistenceByChecksum(rawSong.getChecksum());
 
         if (isExists) {
@@ -208,12 +192,5 @@ public class ResourceService {
     private static String generateChecksum(byte[] rawSong) {
         byte[] hashBytes = DigestUtils.sha256(rawSong);
         return Base64.getEncoder().encodeToString(hashBytes);
-    }
-
-    private void validateBinaryData(byte[] audioFile) {
-        if (audioFile == null || audioFile.length == 0) {
-            log.error("Empty audio file provided.");
-            throw new AudioDataException("Audio file cannot be empty.");
-        }
     }
 }

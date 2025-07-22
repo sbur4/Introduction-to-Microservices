@@ -10,8 +10,7 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-#    url: ${SONG_DB_URL:jdbc:postgresql://localhost:5433/song-db}
-    url: ${SPRING_DATASOURCE_URL:dbc:postgresql://localhost:5433/song-db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/song-db}
     username: ${SONG_POSTGRES_USER:postgres}
     password: ${SONG_POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
