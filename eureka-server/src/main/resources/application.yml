@@ -9,7 +9,6 @@ server:
       min: 10
       idle-timeout: 60000
     connection-idle-timeout: 30000
-#    max-http-post-size: 2MB
 
 spring:
   profiles:
@@ -31,12 +30,27 @@ spring:
   cache:
     cache-names: resource-cache, song-cache
 
-  retry:
-    max-attempts: 3
-    backoff:
-      initial: 100ms
-      multiplier: 2.0
-      max: 2000ms
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    registerWithEureka: false
+    fetchRegistry: false
+
+  server:
+    enableSelfPreservation: false
+    eviction-interval-timer-in-ms: 5000
+    response-cache-update-interval-ms: 30000
+    wait-time-in-ms-when-sync-empty: 0
+
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+    async-client-initialization: true
 
 logging:
   pattern:
@@ -64,28 +78,3 @@ logging:
       discovery: DEBUG
       eureka.registry: TRACE
     github.benmanes.caffeine: WARN
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-    #      defaultZone: http://${eureka.instance.hostname}:${server.port}
-    registerWithEureka: false
-    fetchRegistry: false
-  server:
-    enableSelfPreservation: false
-    eviction-interval-timer-in-ms: 5000
-    viction-interval-timer-in-ms: 5000
-    response-cache-update-interval-ms: 30000
-    peer-eureka-nodes-update-interval-ms: 10000
-    retention-time-in-m-s-in-delta-queue: 30000
-    delta-retention-timer-interval-in-ms: 30000
-    use-read-only-response-cache: true
-    wait-time-in-ms-when-sync-empty: 0
-    max-threads-for-peer-replication: 20
-    max-threads-for-status-replication: 10
-    min-available-instances-for-peer-replication: -1
-  instance:
-    prefer-ip-address: true # false The replica size seems to be empty. Check the route 53 DNS Registry
-    lease-renewal-interval-in-seconds: 5 # RENEWALS ARE LESSER THAN THE THRESHOLD
-    lease-expiration-duration-in-seconds: 15 # RENEWALS ARE LESSER THAN THE THRESHOLD

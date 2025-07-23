@@ -14,17 +14,6 @@ springBoot {
     mainClass = "com.epam.SongServiceApp"
 }
 
-ext {
-    versions = [
-            spring_boot         : '3.5.3',
-            commons_lang3       : '3.18.0',
-            commons_collections4: '4.5.0',
-            postgresql          : '42.7.7',
-            eureka_client       : '4.3.0'
-    ]
-    set('springCloudVersion', "2025.0.0")
-}
-
 group = 'com.epam'
 version = '1.0-SNAPSHOT'
 
@@ -32,9 +21,27 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    versions = [
+            spring_boot         : '3.5.3',
+            commons_lang3       : '3.18.0',
+            commons_collections4: '4.5.0',
+            postgresql          : '42.7.7',
+            eureka_client       : '4.3.0',
+            lombok              : '1.18.38'
+    ]
+    set('springCloudVersion', "2025.0.0")
+}
+
 configurations {
     configureEach {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
 
@@ -47,7 +54,6 @@ dependencies {
 
     implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:${versions.eureka_client}"
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
-    implementation "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
 
     implementation "org.postgresql:postgresql:${versions.postgresql}"
 

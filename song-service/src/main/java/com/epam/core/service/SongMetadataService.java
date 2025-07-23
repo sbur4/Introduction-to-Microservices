@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -33,6 +34,7 @@ public class SongMetadataService {
     private final QueryHandler queryHandler;
     private final ConversionService conversionService;
 
+    @Async
     public DeletedByIdsResponseDto deleteMetadataByIds(final String requestIds) {
         log.debug("Starting delete metadata by ID's: '{}'", requestIds);
 
@@ -84,6 +86,7 @@ public class SongMetadataService {
         }
     }
 
+    @Async
     public SongMetadataResponseDto getMetadataById(final Integer requestId) {
         log.debug("Fetching song metadata for ID: '{}'", requestId);
 
@@ -103,6 +106,7 @@ public class SongMetadataService {
         }
     }
 
+    @Async
     public SongMetadataIdResponseDto saveMetadata(SongMetadataRequestDto requestDto) {
         log.debug("Starting saving metadata with ID: '{}'", requestDto.getId());
 

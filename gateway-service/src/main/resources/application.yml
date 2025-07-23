@@ -3,6 +3,12 @@ server:
   servlet:
     context-path: ${SERVER_CONTEXT_PATH:/}
   shutdown: graceful
+  jetty:
+    threads:
+      max: 200
+      min: 10
+      idle-timeout: 60000
+    connection-idle-timeout: 30000
 
 spring:
   profiles:
@@ -12,23 +18,43 @@ spring:
     discovery:
       locator:
         enabled: true
+        lower-case-service-id: true
     gateway:
       server:
         webflux:
           routes:
             - id: resource-service
-              uri: lb://resource-service
+              uri: ${RESOURCE_SERVICE_URI:lb://resource-service}
               #              uri: http://localhost:8071
               predicates:
                 - Path=/resources/**
+                - Method=GET,POST,DELETE
+
             - id: song-service
-              uri: lb://song-service
+              uri: ${SONG_SERVICE_URI:lb://song-service}
               #              uri: http://localhost:8072
               predicates:
                 - Path=/songs/**
+                - Method=GET,POST,DELETE
 
   application:
     name: api-gateway-service
+
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
+    prefer-ip-address: true
+    async-client-initialization: true
 
 logging:
   pattern:
@@ -54,14 +80,3 @@ logging:
     netflix:
       eureka: DEBUG
       discovery: DEBUG
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    hostname: ${spring.application.name}
-    instance-id: ${spring.application.name}
-    prefer-ip-address: true
