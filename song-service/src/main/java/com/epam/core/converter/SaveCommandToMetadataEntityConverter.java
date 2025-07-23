@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 @Component
-public class CreateMetadataRequestToMetadataEntityConverter implements Converter<SongMetadataRequestDto, SongMetadata> {
+public class SaveCommandToMetadataEntityConverter implements Converter<SongMetadataRequestDto, SongMetadata> {
 
     @Override
     public SongMetadata convert(@NonNull SongMetadataRequestDto requestDto) {

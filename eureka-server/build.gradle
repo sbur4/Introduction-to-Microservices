@@ -41,11 +41,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
 
-    // netflix eureka server
     implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-server:${versions.spring_cloud}"
     implementation "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
 
-    // loadbalancer + cache
     implementation "org.springframework.cloud:spring-cloud-starter-loadbalancer:${versions.spring_cloud}"
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation "com.github.ben-manes.caffeine:caffeine:${versions.caffeine}"

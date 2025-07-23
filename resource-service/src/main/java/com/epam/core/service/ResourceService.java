@@ -1,9 +1,15 @@
 package com.epam.core.service;
 
+import com.epam.core.converter.RequestDtoToCommandDtoConverter;
+import com.epam.core.cqrs.command.DeleteByIdsCommand;
+import com.epam.core.cqrs.handler.CommandHandler;
+import com.epam.core.cqrs.handler.QueryHandler;
+import com.epam.core.cqrs.query.FindByIdQuery;
+import com.epam.core.cqrs.query.FindByIdsQuery;
+import com.epam.core.dto.FindByIdDto;
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
 import com.epam.core.dto.response.UploadedSongResponseDto;
-import com.epam.core.exception.AudioDataException;
 import com.epam.core.exception.DeleteSongAndMetadataByIdsException;
 import com.epam.core.exception.GetSongByIdException;
 import com.epam.core.exception.ResourceDeletionException;
@@ -25,15 +31,12 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 // SAGA design pattern
@@ -43,35 +46,33 @@ import java.util.stream.Collectors;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ResourceService {
 
+    private final CommandHandler commandHandler;
+    private final QueryHandler queryHandler;
+    //
     ResourceRepository resourceRepository;
     SongServiceFeignClient songServiceFeignClient;
     MetadataExtractorImpl metadataExtractor;
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public DeletedByIdsResponseDto deleteSongsAndMetadataByIds(final String requestIds) {
         log.debug("Starting delete songs and metadata by ID's: '{}'", requestIds);
 
         validateRequestIds(requestIds);
 
-        List<Integer> splittedIds = Arrays.stream(StringUtils.split(requestIds, ","))
-                .map(StringUtils::strip)
-                .map(Integer::parseInt)
-                .toList();
+        List<Integer> splittedIds = splitIds(requestIds);
 
         log.debug("Validated and parsed ID's: '{}'", splittedIds);
-        List<Integer> idsForRemoving = resourceRepository.findExistingIds(splittedIds);
+        DeletedByIdsResponseDto responseDto = queryHandler.findByIds(new FindByIdsQuery(splittedIds));
+        List<Integer> idsForRemoving = responseDto.getIds();
 
         if (CollectionUtils.isEmpty(idsForRemoving)) {
             log.warn("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
         } else {
-            String ids = idsForRemoving.stream()
-                    .map(i -> Integer.toString(i))
-                    .collect(Collectors.joining(", "));
+            String ids = buildRequest(idsForRemoving);
 
             deleteMetadata(ids);
 
             log.debug("Deleting songs by ID's: '{}'", ids);
-            resourceRepository.deleteAllById(idsForRemoving);
+            commandHandler.deleteByIds(new DeleteByIdsCommand(idsForRemoving));
             log.info("Successfully deleted songs and metadata by ID's: '{}'", idsForRemoving);
         }
         return new DeletedByIdsResponseDto(idsForRemoving);
@@ -88,12 +89,17 @@ public class ResourceService {
         }
     }
 
-    private void validateIdsForRemoving(List<Integer> idsForRemoving) {
-        if (CollectionUtils.isEmpty(idsForRemoving)) {
-            log.error("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
-            throw new DeleteSongAndMetadataByIdsException(
-                    "Song with the specified ID's: '%s' does not exist.".formatted(idsForRemoving), HttpStatus.NOT_FOUND);
-        }
+    private String buildRequest(List<Integer> idsForRemoving) {
+        return idsForRemoving.stream()
+                .map(i -> Integer.toString(i))
+                .collect(Collectors.joining(", "));
+    }
+
+    private List<Integer> splitIds(String requestIds) {
+        return Arrays.stream(StringUtils.split(requestIds, ","))
+                .map(StringUtils::strip)
+                .map(Integer::parseInt)
+                .toList();
     }
 
     private void validateRequestIds(String requestIds) {
@@ -115,58 +121,49 @@ public class ResourceService {
 
         if (CollectionUtils.isNotEmpty(invalidIds)) {
 
-            log.error("The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{%s}'".formatted(invalidIds));
+            log.error("The provided ID's '{}' is invalid (e.g., contains letters, decimals, is negative, or zero).", invalidIds);
             throw new DeleteSongAndMetadataByIdsException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
                     .formatted(invalidIds));
         }
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.REPEATABLE_READ, readOnly = true)
     public Resource getSongById(final Integer requestId) {
         log.debug("Fetching song by ID: '{}'", requestId);
 
         validateRequestId(requestId);
 
-        Song fetchedSong = fetchedSong(requestId);
+        FindByIdDto fetchedSong = queryHandler.findById(new FindByIdQuery(requestId));
         log.info("Successfully fetched song by ID' '{}'", requestId);
 
         return new ByteArrayResource(fetchedSong.getData());
     }
 
-    private Song fetchedSong(Integer requestId) {
-        return resourceRepository.findById(requestId)
-                .orElseThrow(() -> {
-                    log.error("Song with the specified ID '{}' does not exist.", requestId);
-                    return new GetSongByIdException(
-                            "Song with the specified ID '%s' does not exist".formatted(requestId), HttpStatus.NOT_FOUND);
-                });
-    }
-
     private void validateRequestId(Integer requestId) {
         if (Objects.isNull(requestId) || requestId <= 0) {
-            log.error("The provided ID is invalid (e.g., contains letters, decimals, is negative, or zero): %s".formatted(requestId));
+            log.error("The provided ID '%s' is invalid (e.g., contains letters, decimals, is negative, or zero).", requestId);
             throw new GetSongByIdException("The provided ID: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
                     .formatted(requestId));
         }
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public UploadedSongResponseDto saveSongAndMetadata(final byte[] audioFile) {
         log.debug("Starting saving song and metadata.");
 
-//        validateBinaryData(audioFile);
         if (audioFile == null || audioFile.length == 0) {
             return new UploadedSongResponseDto();
         }
 
-        Metadata audioMetadata = AudioParserUtil.parseMp3File(audioFile);
+        Metadata audioMetadata = CompletableFuture.supplyAsync(() -> AudioParserUtil.parseMp3File(audioFile))
+                .join();
 
-        SongMetadataRequestDto songMetadataRequestDto = metadataExtractor.extractData(audioMetadata);
+        SongMetadataRequestDto songMetadataRequestDto = CompletableFuture.supplyAsync(
+                        () -> metadataExtractor.extractData(audioMetadata))
+                .join();
 
         Song rawSong = Song.builder().data(audioFile).build();
 
         validateSongIsExist(rawSong, songMetadataRequestDto);
-
+//        RequestDtoToCommandDtoConverter converter =
         Song savedSong = resourceRepository.save(rawSong);
         songMetadataRequestDto.setId(savedSong.getId());
 
@@ -177,7 +174,7 @@ public class ResourceService {
 
     private void saveMetadata(SongMetadataRequestDto songMetadataRequestDto, Integer songId) {
         try {
-            log.debug("Saving metadata for ID's': '{}'", songId);
+            log.debug("Saving metadata for ID: '{}'", songId);
             songServiceFeignClient.saveMetadata(songMetadataRequestDto);
             log.info("Successfully saved metadata for ID: '{}'", songId);
         } catch (FeignException ex) {
@@ -198,13 +195,6 @@ public class ResourceService {
                     songMetadataRequestDto.getName(), songMetadataRequestDto.getArtist());
             log.error("Duplicate song detected: '{}'", songInfo);
             throw new SongAlreadyExistException("Song already exist with info: '%s'.".formatted(songInfo));
-        }
-    }
-
-    private void validateBinaryData(byte[] audioFile) {
-        if (audioFile == null || audioFile.length == 0) {
-            log.error("Empty audio file provided.");
-            throw new AudioDataException("Audio file cannot be empty.");
         }
     }
 }

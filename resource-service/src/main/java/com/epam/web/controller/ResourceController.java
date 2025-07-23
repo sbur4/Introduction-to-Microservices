@@ -46,5 +46,3 @@ public class ResourceController {
         return ResponseEntity.ok(resourceService.deleteSongsAndMetadataByIds(requestIds));
     }
 }
-
-// todo compl future

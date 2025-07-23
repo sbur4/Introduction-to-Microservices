@@ -43,20 +43,15 @@ dependencyManagement {
 }
 
 dependencies {
-//    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
 
     implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:${versions.eureka_client}"
 
-//    implementation "org.springframework.cloud:spring-cloud-starter-gateway:${versions.eureka_client}"
     implementation "org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:${versions.eureka_client}"
 
     implementation "org.springframework.cloud:spring-cloud-circuitbreaker-spring-retry:${versions.retry}"
     implementation "org.springframework.cloud:spring-cloud-circuitbreaker-resilience4j:${versions.retry}"
-
-//    compileOnly 'org.projectlombok:lombok'
-//    annotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('jar') {

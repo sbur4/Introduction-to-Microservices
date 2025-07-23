@@ -1,5 +1,11 @@
 package com.epam.core.service;
 
+import com.epam.core.cqrs.command.DeleteByIdsCommand;
+import com.epam.core.cqrs.command.SaveEntityCommand;
+import com.epam.core.cqrs.handler.CommandHandler;
+import com.epam.core.cqrs.handler.QueryHandler;
+import com.epam.core.cqrs.query.FindByIdQuery;
+import com.epam.core.cqrs.query.FindByIdsQuery;
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
 import com.epam.core.dto.response.SongMetadataIdResponseDto;
@@ -7,62 +13,51 @@ import com.epam.core.dto.response.SongMetadataResponseDto;
 import com.epam.core.exception.DeleteMetadataByIdsException;
 import com.epam.core.exception.GetMetadataByIdException;
 import com.epam.core.exception.MetadataAlreadyExistException;
-import com.epam.data.entity.SongMetadata;
-import com.epam.data.repository.SongMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SongMetadataService {
 
-    private final SongMetadataRepository metadataRepository;
+    private final CommandHandler commandHandler;
+    private final QueryHandler queryHandler;
     private final ConversionService conversionService;
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public DeletedByIdsResponseDto deleteMetadataByIds(final String requestIds) {
         log.debug("Starting delete metadata by ID's: '{}'", requestIds);
 
         validateRequestIds(requestIds);
 
-        List<Integer> splittedIds = Arrays.stream(StringUtils.split(requestIds, ","))
-                .map(StringUtils::strip)
-                .map(Integer::parseInt)
-                .toList();
+        List<Integer> splittedIds = splitIds(requestIds);
         log.debug("Validated and parsed ID's: '{}'", splittedIds);
 
-        List<Integer> idsForRemoving = metadataRepository.findExistingIdsByResourceIdIn(splittedIds);
+        DeletedByIdsResponseDto responseDto = queryHandler.findByIds(new FindByIdsQuery(splittedIds));
+        List<Integer> idsForRemoving = responseDto.ids();
 
-//        validateIdsForRemoving(idsForRemoving);
         if (CollectionUtils.isNotEmpty(idsForRemoving)) {
             log.debug("Deleting metadata by ID's': '{}'", idsForRemoving);
-            metadataRepository.deleteByIdIn(idsForRemoving);
+            commandHandler.deleteByIds(new DeleteByIdsCommand(idsForRemoving));
         }
 
         log.info("Successfully deleted metadata by ID's: '{}'", idsForRemoving);
-        return new DeletedByIdsResponseDto(idsForRemoving);
+        return responseDto;
     }
 
-    private void validateIdsForRemoving(List<Integer> idsForRemoving) {
-        if (CollectionUtils.isEmpty(idsForRemoving)) {
-            String errorMessage = "Song metadata with the specified ID's: '%s' does not exist.".formatted(idsForRemoving);
-            log.error("Restriction: Song metadata with the specified ID's does not exist: '{}'", idsForRemoving);
-            throw new DeleteMetadataByIdsException(HttpStatus.NOT_FOUND, errorMessage);
-        }
+    private List<Integer> splitIds(String requestIds) {
+        return Arrays.stream(StringUtils.split(requestIds, ","))
+                .map(StringUtils::strip)
+                .map(Integer::parseInt)
+                .toList();
     }
 
     private void validateRequestIds(String requestIds) {
@@ -83,33 +78,21 @@ public class SongMetadataService {
                 .toList();
 
         if (CollectionUtils.isNotEmpty(invalidIds)) {
-            log.error("Restriction: The provided ID's is invalid (e.g., contains letters, decimals, is negative, or zero): '{}'.", invalidIds);
+            log.error("Restriction: The provided ID's: '{}' is invalid (e.g., contains letters, decimals, is negative, or zero).", invalidIds);
             throw new DeleteMetadataByIdsException("The provided ID's: '%s' is invalid (e.g., contains letters, decimals, is negative, or zero)."
                     .formatted(invalidIds));
         }
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.REPEATABLE_READ, readOnly = true)
     public SongMetadataResponseDto getMetadataById(final Integer requestId) {
         log.debug("Fetching song metadata for ID: '{}'", requestId);
 
         validateRequestId(requestId);
 
-        SongMetadata fetchedSongMetadata = getSongMetadata(requestId)
-                .orElseThrow(() -> {
-                    log.error("Song metadata with the specified ID '{}' does not exist.", requestId);
-                    return new GetMetadataByIdException(
-                            "Song metadata with the specified ID '%s' does not exist".formatted(requestId), HttpStatus.NOT_FOUND);
-                });
-
-        SongMetadataResponseDto responseDto = conversionService.convert(fetchedSongMetadata, SongMetadataResponseDto.class);
+        SongMetadataResponseDto responseDto = queryHandler.findById(new FindByIdQuery(requestId));
 
         log.info("Successfully fetched song metadata for ID: '{}'", requestId);
         return responseDto;
-    }
-
-    private Optional<SongMetadata> getSongMetadata(Integer requestId) {
-        return metadataRepository.findByResourceId(requestId);
     }
 
     private void validateRequestId(Integer requestId) {
@@ -120,27 +103,21 @@ public class SongMetadataService {
         }
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public SongMetadataIdResponseDto saveMetadata(SongMetadataRequestDto requestDto) {
         log.debug("Starting saving metadata with ID: '{}'", requestDto.getId());
 
-        validateRequestDto(requestDto);
+        validateRequestDto(requestDto.getId());
 
-        SongMetadata newMetadata = conversionService.convert(requestDto, SongMetadata.class);
-
-        SongMetadata createdMetadata = metadataRepository.save(newMetadata);
-        log.info("Successfully saving song metadata for ID: '{}'", createdMetadata.getId());
-
-        return new SongMetadataIdResponseDto(createdMetadata.getId());
+        SaveEntityCommand saveCommand = conversionService.convert(requestDto, SaveEntityCommand.class);
+        return commandHandler.saveMetadata(saveCommand);
     }
 
-    private void validateRequestDto(SongMetadataRequestDto requestDto) {
-        boolean isMetadataExist = getSongMetadata(requestDto.getId())
-                .isPresent();
+    private void validateRequestDto(Integer requestId) {
+        boolean isMetadataExist = queryHandler.isExistByResourceId(new FindByIdQuery(requestId));
 
         if (isMetadataExist) {
-            log.error("Metadata existence check for ID '{}': '{}'", requestDto.getId(), isMetadataExist);
-            throw new MetadataAlreadyExistException("Metadata already exists for the given ID: '%d'".formatted(requestDto.getId()));
+            log.error("Metadata existence check for ID '{}': '{}'", requestId, isMetadataExist);
+            throw new MetadataAlreadyExistException("Metadata already exists for the given ID: '%d'".formatted(requestId));
         }
     }
 }
