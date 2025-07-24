@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class SongAlreadyExistException extends BaseRuntimeException {
 
-    private static final int errorHttpStatusCode = HttpStatus.BAD_REQUEST.value();
+    private static final int errorHttpStatusCode = HttpStatus.CONFLICT.value();
     private static final String errorHttpMessage = "Metadata extract error.";
 
     public SongAlreadyExistException(String errorMessage) {
