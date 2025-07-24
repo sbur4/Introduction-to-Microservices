@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class MetadataExtractException extends BaseRuntimeException {
 
-    private static final int errorHttpStatusCode = HttpStatus.BAD_REQUEST.value();
+    private static final int errorHttpStatusCode = HttpStatus.CONFLICT.value();
     private static final String errorHttpMessage = "Metadata extract error.";
 
     public MetadataExtractException(String errorMessage) {

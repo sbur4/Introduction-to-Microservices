@@ -1,7 +1,6 @@
 package com.epam.core.config;
 
 import com.epam.core.converter.GetSongEntityToResponseDtoConverter;
-import com.epam.core.converter.RequestDtoToCommandDtoConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -34,8 +33,7 @@ public class ConversionConfig {
 
     private static Set<Converter<?, ?>> getConverters() {
         return Stream.of(
-                new GetSongEntityToResponseDtoConverter(),
-                new RequestDtoToCommandDtoConverter()
+                new GetSongEntityToResponseDtoConverter()
         ).collect(Collectors.toSet());
     }
 

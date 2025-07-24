@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-// [NOTE]: API gateway pattern
+// [NOTE]: API gateway pattern or BFF
 @EnableAsync
 @EnableDiscoveryClient
 @SpringBootApplication

@@ -9,5 +9,4 @@ public class FindByIdDto {
 
     int id;
     byte[] data;
-    String checksum;
 }

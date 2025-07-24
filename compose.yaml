@@ -3,7 +3,7 @@ services:
     image: postgres:17-alpine
     container_name: resource-db
     environment:
-      POSTGRES_DB:  ${RESOURCE_POSTGRES_DB}
+      POSTGRES_DB: ${RESOURCE_POSTGRES_DB}
       POSTGRES_USER: ${RESOURCE_POSTGRES_USER}
       POSTGRES_PASSWORD: ${RESOURCE_POSTGRES_PASSWORD}
     ports:
@@ -32,17 +32,46 @@ services:
       RESOURCE_SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: ${RESOURCE_DB_URL}
       SONG_SERVICE_URL: "http://song-service:8081/songs"
+      EUREKA_DEFAULT_ZONE: ${EUREKA_DEFAULT_ZONE}
     ports:
       - "8071:8080"
+    depends_on:
+      - resource-db
 
   song-service:
     build:
       context: song-service
       dockerfile: Dockerfile
-    container_name: song-service
+#    container_name: song-service
     environment:
       SONG_SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: ${SONG_DB_URL}
+      EUREKA_DEFAULT_ZONE: ${EUREKA_DEFAULT_ZONE}
     ports:
-      - "8072:8081"
+      - "8072-8073:8081"
+    depends_on:
+      - song-db
+    deploy:
+      replicas: 2
 
+  eureka-serer:
+    build:
+      context: eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    environment:
+      EUREKA_SERVER_PORT: 8761
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+    ports:
+      - "8761:8761"
+
+  gateway-service:
+    build:
+      context: gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    environment:
+      BFF_SERVER_PORT: 8075
+      EUREKA_DEFAULT_ZONE: ${EUREKA_DEFAULT_ZONE}
+    ports:
+      - "8075:8075"

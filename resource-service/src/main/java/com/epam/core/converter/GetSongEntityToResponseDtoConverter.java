@@ -16,7 +16,6 @@ public class GetSongEntityToResponseDtoConverter implements Converter<Song, Find
         return FindByIdDto.builder()
                 .id(Objects.requireNonNull(fetchedSong.getId()))
                 .data(Objects.requireNonNull(fetchedSong.getData()))
-                .checksum(Objects.requireNonNull(fetchedSong.getChecksum()))
                 .build();
     }
 }

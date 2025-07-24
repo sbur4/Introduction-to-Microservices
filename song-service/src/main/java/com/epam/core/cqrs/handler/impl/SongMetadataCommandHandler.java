@@ -10,8 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -22,19 +23,22 @@ public class SongMetadataCommandHandler implements CommandHandler {
     private final ConversionService conversionService;
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public SongMetadataIdResponseDto saveMetadata(final SaveEntityCommand command) {
         SongMetadata newMetadata = conversionService.convert(command, SongMetadata.class);
 
         SongMetadata createdMetadata = metadataRepository.save(newMetadata);
-        log.info("Successfully saving song metadata for ID: '{}'", createdMetadata.getId());
+        int createdId = createdMetadata.getId();
+        log.info("Successfully saving song metadata for ID: '{}'", createdId);
 
-        return new SongMetadataIdResponseDto(createdMetadata.getId());
+        return new SongMetadataIdResponseDto(createdId);
     }
 
     @Override
     @Transactional
     public void deleteByIds(final DeleteByIdsCommand command) {
-        metadataRepository.deleteByIdIn(command.getIds());
+        List<Integer> idsForRemoving = command.getIds();
+        metadataRepository.deleteByIdIn(idsForRemoving);
+        log.info("Successfully deleted metadata by ID's: '{}'", idsForRemoving);
     }
 }

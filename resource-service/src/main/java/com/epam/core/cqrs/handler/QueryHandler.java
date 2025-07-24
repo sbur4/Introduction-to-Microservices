@@ -10,6 +10,4 @@ public interface QueryHandler {
     FindByIdDto findById(FindByIdQuery query);
 
     DeletedByIdsResponseDto findByIds(FindByIdsQuery query);
-
-    boolean isExistById(FindByIdQuery query);
 }

@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-// Circuit breaker design pattern
-// Retry design pattern
+// [NOTE]: Circuit breaker design pattern
+// [NOTE]: Retry design pattern
 @CircuitBreaker(name = "${song.service.name}")
 @FeignClient(name = "${song.service.name}", url = "${song.service.base-url}", fallback = SongServiceFeignClientFallback.class)
 public interface SongServiceFeignClient {

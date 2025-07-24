@@ -1,9 +1,8 @@
 package com.epam.core.cqrs.handler.impl;
 
 import com.epam.core.cqrs.command.DeleteByIdsCommand;
-import com.epam.core.cqrs.command.SaveEntityCommand;
 import com.epam.core.cqrs.handler.CommandHandler;
-import com.epam.core.dto.response.UploadedSongResponseDto;
+import com.epam.data.entity.Song;
 import com.epam.data.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +19,8 @@ public class SongCommandHandlerImpl implements CommandHandler {
 
     @Override
     @Transactional
-    public UploadedSongResponseDto saveSong(SaveEntityCommand command) {
-        return null;
+    public Song saveSong(Song rawSong) {
+        return resourceRepository.save(rawSong);
     }
 
     @Override

@@ -8,9 +8,8 @@ import com.epam.core.exception.CustomFeignApiException;
 import com.epam.core.exception.DeleteSongAndMetadataByIdsException;
 import com.epam.core.exception.DurationFormatException;
 import com.epam.core.exception.GetSongByIdException;
-import com.epam.core.exception.MetadataExtractException;
 import com.epam.core.exception.ResourceDeletionException;
-import com.epam.core.exception.SongAlreadyExistException;
+import com.epam.core.exception.MetadataExtractException;
 import com.epam.core.exception.model.ApiErrorModel;
 import com.epam.core.exception.model.ApiErrorModelDetails;
 import feign.FeignException;
@@ -179,20 +178,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getApiErrorModel(), ex.getHttpStatus());
     }
 
-    @ExceptionHandler(MetadataExtractException.class)
-    public ResponseEntity<ApiErrorModel> handleMetadataExtractException(MetadataExtractException ex) {
-        log.warn("{} {}: '{}'", INTERNAL_ERROR_MSG, " when extract metadata", ex.getApiErrorModel().getErrorMessage());
-        return new ResponseEntity<>(ex.getApiErrorModel(), ex.getHttpStatus());
-    }
-
     @ExceptionHandler(ResourceDeletionException.class)
     public ResponseEntity<ApiErrorModel> handleResourceDeletionException(ResourceDeletionException ex) {
         log.warn("{} {}: '{}'", INTERNAL_ERROR_MSG, " when resource delete", ex.getApiErrorModel().getErrorMessage());
         return new ResponseEntity<>(ex.getApiErrorModel(), ex.getHttpStatus());
     }
 
-    @ExceptionHandler(SongAlreadyExistException.class)
-    public ResponseEntity<ApiErrorModel> handleSongAlreadyExistException(SongAlreadyExistException ex) {
+    @ExceptionHandler(MetadataExtractException.class)
+    public ResponseEntity<ApiErrorModel> handleSongAlreadyExistException(MetadataExtractException ex) {
         log.warn("{} {}: '{}'", INTERNAL_ERROR_MSG, " when song already exist", ex.getApiErrorModel().getErrorMessage());
         return new ResponseEntity<>(ex.getApiErrorModel(), ex.getHttpStatus());
     }

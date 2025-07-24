@@ -48,9 +48,4 @@ public class SongQueryHandlerImpl implements QueryHandler {
         List<Integer> existedIds = resourceRepository.findExistingIds(query.getIds());
         return new DeletedByIdsResponseDto(existedIds);
     }
-
-    @Override
-    public boolean isExistById(FindByIdQuery query) {
-        return false;
-    }
 }

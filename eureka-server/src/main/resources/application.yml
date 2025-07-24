@@ -1,7 +1,7 @@
 server:
-  port: ${SERVER_PORT:8761}
+  port: ${EUREKA_SERVER_PORT:8761}
   servlet:
-    context-path: ${SERVER_CONTEXT_PATH:/}
+    context-path: ${EUREKA_SERVER_CONTEXT_PATH:/}
   shutdown: graceful
   jetty:
     threads:
@@ -15,7 +15,7 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   application:
-    name: netflix-eureka-server
+    name: eureka-server
 
   cloud:
     loadbalancer:
@@ -36,7 +36,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka}
     registerWithEureka: false
     fetchRegistry: false
 
@@ -61,8 +61,13 @@ logging:
       springframework:
         web: DEBUG
         web.servlet.mvc.method.annotation: DEBUG
+        web.reactive: DEBUG
         retry: DEBUG
+        cache: DEBUG
         cloud:
+          netflix:
+            eureka: DEBUG
+            server: DEBUG
           loadbalancer: DEBUG
           client:
             loadbalancer: DEBUG
@@ -77,4 +82,14 @@ logging:
       eureka: DEBUG
       discovery: DEBUG
       eureka.registry: TRACE
+      eureka.lease: DEBUG
+      eureka.transport: DEBUG
     github.benmanes.caffeine: WARN
+  reactor:
+    netty:
+      http:
+        client: DEBUG
+        server: DEBUG
+  io:
+    projectreactor:
+      netty: DEBUG

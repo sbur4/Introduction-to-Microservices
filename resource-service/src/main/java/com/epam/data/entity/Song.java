@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,8 +22,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "songs",
-        uniqueConstraints = @UniqueConstraint(columnNames = "checksum"),
-        indexes = {@Index(columnList = "id"), @Index(columnList = "checksum")}
+        indexes = @Index(columnList = "id")
 )
 public class Song {
 
@@ -35,7 +33,4 @@ public class Song {
     @Lob
     @Column(name = "data")
     private byte[] data;
-
-    @Column(name = "checksum", updatable = false, nullable = false, unique = true)
-    private String checksum;
 }

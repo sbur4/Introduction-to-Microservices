@@ -1,6 +1,5 @@
 package com.epam.core.service;
 
-import com.epam.core.converter.RequestDtoToCommandDtoConverter;
 import com.epam.core.cqrs.command.DeleteByIdsCommand;
 import com.epam.core.cqrs.handler.CommandHandler;
 import com.epam.core.cqrs.handler.QueryHandler;
@@ -13,11 +12,9 @@ import com.epam.core.dto.response.UploadedSongResponseDto;
 import com.epam.core.exception.DeleteSongAndMetadataByIdsException;
 import com.epam.core.exception.GetSongByIdException;
 import com.epam.core.exception.ResourceDeletionException;
-import com.epam.core.exception.SongAlreadyExistException;
 import com.epam.core.extractor.impl.MetadataExtractorImpl;
 import com.epam.core.util.AudioParserUtil;
 import com.epam.data.entity.Song;
-import com.epam.data.repository.ResourceRepository;
 import com.epam.web.feign.client.SongServiceFeignClient;
 import feign.FeignException;
 import lombok.AccessLevel;
@@ -27,10 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.metadata.Metadata;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -39,17 +35,16 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-// INFO: SAGA design pattern
+// [INFO]: SAGA design pattern
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ResourceService {
 
-    private final CommandHandler commandHandler;
-    private final QueryHandler queryHandler;
-    //
-    ResourceRepository resourceRepository;
+    CommandHandler commandHandler;
+    QueryHandler queryHandler;
+    ConversionService conversionService;
     SongServiceFeignClient songServiceFeignClient;
     MetadataExtractorImpl metadataExtractor;
 
@@ -161,12 +156,9 @@ public class ResourceService {
                 .join();
 
         Song rawSong = Song.builder().data(audioFile).build();
+        Song savedSong = commandHandler.saveSong(rawSong);
 
-        validateSongIsExist(rawSong, songMetadataRequestDto);
-//        RequestDtoToCommandDtoConverter converter =
-        Song savedSong = resourceRepository.save(rawSong);
         songMetadataRequestDto.setId(savedSong.getId());
-
         saveMetadata(songMetadataRequestDto, savedSong.getId());
 
         return new UploadedSongResponseDto(savedSong.getId());
@@ -180,17 +172,6 @@ public class ResourceService {
         } catch (FeignException ex) {
             log.error("Failed to save metadata for song ID '{}': {}", songId, ex.contentUTF8());
             throw new ResourceDeletionException("Failed to save metadata with resource ID: '%s'.".formatted(songId));
-        }
-    }
-
-    private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        boolean isExists = resourceRepository.checkExistenceByChecksum(rawSong.getChecksum());
-
-        if (isExists) {
-            String songInfo = String.format("Name: %s, Artist: %s",
-                    songMetadataRequestDto.getName(), songMetadataRequestDto.getArtist());
-            log.error("Duplicate song detected: '{}'", songInfo);
-            throw new SongAlreadyExistException("Song already exist with info: '%s'.".formatted(songInfo));
         }
     }
 }

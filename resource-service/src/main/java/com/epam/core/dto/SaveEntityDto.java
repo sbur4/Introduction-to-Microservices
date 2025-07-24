@@ -9,5 +9,4 @@ public class SaveEntityDto {
 
     int id;
     byte[] data;
-    String checksum;
 }
