@@ -136,7 +136,6 @@ public class GlobalExceptionHandler {
 
         Map<String, String> errorDetails = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
-//                        fieldError -> "Field: '{%s}' with value: '{%s}'".formatted(fieldError.getField(), fieldError.getRejectedValue()),
                         FieldError::getField,
                         FieldError::getDefaultMessage,
                         (existing, replacement) -> existing

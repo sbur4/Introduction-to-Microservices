@@ -10,11 +10,6 @@ java {
     }
 }
 
-tasks.register('wrapper', Wrapper) {
-    gradleVersion = '8.14'
-    distributionType = Wrapper.DistributionType.BIN
-}
-
 springBoot {
     mainClass = "com.epam.ResourceServiceApp"
 }
@@ -29,7 +24,8 @@ ext {
             openfeign           : '4.3.0',
             retry               : '3.3.0',
             feign_jackson       : '13.6',
-            resilience4j       : '2.3.0'
+            resilience4j       : '2.3.0',
+            apache_codec       : '1.18.0'
     ]
 }
 
@@ -67,6 +63,7 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:${versions.commons_lang3}"
     implementation "org.apache.commons:commons-collections4:${versions.commons_collections4}"
     implementation 'org.apache.commons:commons-math4-core:4.0-beta1'
+    implementation "commons-codec:commons-codec:${versions.apache_codec}"
 }
 
 tasks.named('jar') {

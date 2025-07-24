@@ -3,7 +3,6 @@ package com.epam.core.service;
 import com.epam.core.dto.request.SongMetadataRequestDto;
 import com.epam.core.dto.response.DeletedByIdsResponseDto;
 import com.epam.core.dto.response.UploadedSongResponseDto;
-import com.epam.core.exception.AudioDataException;
 import com.epam.core.exception.DeleteSongAndMetadataByIdsException;
 import com.epam.core.exception.GetSongByIdException;
 import com.epam.core.exception.ResourceDeletionException;
@@ -18,13 +17,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.metadata.Metadata;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -32,6 +30,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -84,14 +83,6 @@ public class ResourceService {
         } catch (FeignException ex) {
             log.error("FeignException occurred while deleting metadata by ID's '{}': {}", requestIds, ex.contentUTF8(), ex);
             throw new ResourceDeletionException("Failed to delete metadata by ID's: '%s'.".formatted(requestIds));
-        }
-    }
-
-    private void validateIdsForRemoving(List<Integer> idsForRemoving) {
-        if (CollectionUtils.isEmpty(idsForRemoving)) {
-            log.error("Restriction: Song with the specified ID's does not exist: '{}'", idsForRemoving);
-            throw new DeleteSongAndMetadataByIdsException(
-                    "Song with the specified ID's: '%s' does not exist.".formatted(idsForRemoving), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -153,7 +144,6 @@ public class ResourceService {
     public UploadedSongResponseDto saveSongAndMetadata(final byte[] audioFile) {
         log.debug("Starting saving song and metadata.");
 
-//        validateBinaryData(audioFile);
         if (audioFile == null || audioFile.length == 0) {
             return new UploadedSongResponseDto();
         }
@@ -162,7 +152,10 @@ public class ResourceService {
 
         SongMetadataRequestDto songMetadataRequestDto = metadataExtractor.extractData(audioMetadata);
 
-        Song rawSong = Song.builder().data(audioFile).build();
+        Song rawSong = Song.builder()
+                .data(audioFile)
+                .checksum(generateChecksum(audioFile))
+                .build();
 
         validateSongIsExist(rawSong, songMetadataRequestDto);
 
@@ -186,11 +179,7 @@ public class ResourceService {
     }
 
     private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withMatcher("data", ExampleMatcher.GenericPropertyMatcher::exact);
-        Example<Song> songExample = Example.of(rawSong, matcher);
-
-        boolean isExists = resourceRepository.exists(songExample);
+        boolean isExists = resourceRepository.checkExistenceByChecksum(rawSong.getChecksum());
 
         if (isExists) {
             String songInfo = String.format("Name: %s, Artist: %s",
@@ -200,10 +189,8 @@ public class ResourceService {
         }
     }
 
-    private void validateBinaryData(byte[] audioFile) {
-        if (audioFile == null || audioFile.length == 0) {
-            log.error("Empty audio file provided.");
-            throw new AudioDataException("Audio file cannot be empty.");
-        }
+    private static String generateChecksum(byte[] rawSong) {
+        byte[] hashBytes = DigestUtils.sha256(rawSong);
+        return Base64.getEncoder().encodeToString(hashBytes);
     }
 }
