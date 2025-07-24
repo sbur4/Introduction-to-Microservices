@@ -8,12 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+// [NOTE]: Database per service design pattern
 @Repository
 public interface ResourceRepository extends JpaRepository<Song, Integer> {
 
     @Query(value = "SELECT id FROM songs WHERE id IN :ids", nativeQuery = true)
     List<Integer> findExistingIds(@Param("ids") List<Integer> ids);
 
-    @Query("SELECT COUNT(s) > 0 FROM Song s WHERE s.checksum = :checksum")
-    Boolean checkExistenceByChecksum(@Param("checksum") String checksum);
+//    @Query("SELECT COUNT(s) > 0 FROM Song s WHERE s.checksum = :checksum")
+//    Boolean checkExistenceByChecksum(@Param("checksum") String checksum);
 }

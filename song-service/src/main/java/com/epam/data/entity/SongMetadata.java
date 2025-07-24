@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "songs_metadata",
-        uniqueConstraints = {@UniqueConstraint(columnNames = "id"), @UniqueConstraint(columnNames = "resourceId")},
+        uniqueConstraints = @UniqueConstraint(columnNames = "id"),
         indexes = @Index(columnList = "resourceId")
 )
 public class SongMetadata {

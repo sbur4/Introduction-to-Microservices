@@ -12,11 +12,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.async")
 public final class AsyncProperties {
 
-    Integer minCorePoolSize;
-    Integer maxPoolMultiplier;
-    Integer queueCapacityMultiplier;
+    int minCorePoolSize;
+    int maxPoolMultiplier;
+    int queueCapacityMultiplier;
     String threadNamePrefix;
-    Integer keepAlive;
-    Integer asyncRequestTimeout;
-    Integer shutdownWaitTime;
+    int keepAlive;
+    int asyncRequestTimeout;
+    int shutdownWaitTime;
 }

@@ -1,3 +1,5 @@
 rootProject.name = 'gradle-project'
 include 'resource-service'
 include 'song-service'
+include 'eureka-server'
+include 'gateway-service'
