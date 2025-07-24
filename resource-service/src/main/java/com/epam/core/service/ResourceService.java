@@ -184,11 +184,7 @@ public class ResourceService {
     }
 
     private void validateSongIsExist(Song rawSong, SongMetadataRequestDto songMetadataRequestDto) {
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withMatcher("data", ExampleMatcher.GenericPropertyMatcher::exact);
-        Example<Song> songExample = Example.of(rawSong, matcher);
-
-        boolean isExists = resourceRepository.exists(songExample);
+        boolean isExists = resourceRepository.checkExistenceByChecksum(rawSong.getChecksum());
 
         if (isExists) {
             String songInfo = String.format("Name: %s, Artist: %s",

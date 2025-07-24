@@ -14,4 +14,7 @@ public interface ResourceRepository extends JpaRepository<Song, Integer> {
 
     @Query(value = "SELECT id FROM songs WHERE id IN :ids", nativeQuery = true)
     List<Integer> findExistingIds(@Param("ids") List<Integer> ids);
+
+    @Query("SELECT COUNT(s) > 0 FROM Song s WHERE s.checksum = :checksum")
+    Boolean checkExistenceByChecksum(@Param("checksum") String checksum);
 }
